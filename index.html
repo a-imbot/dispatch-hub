@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dispatch Hub">
+<title>Dispatch Hub — FR10 · DLV2</title>
+<style>
+:root{
+  --bg:#050506;--elev:#0a0a0c;--well:#0F0F12;
+  --surface:rgba(255,255,255,.05);--surface-h:rgba(255,255,255,.08);
+  --fg:#EDEDEF;--muted:#8A8F98;--faint:rgba(255,255,255,.38);
+  --accent:#5E6AD2;--accent-b:#6872D9;
+  --line:rgba(255,255,255,.06);--line-h:rgba(255,255,255,.11);--line-a:rgba(94,106,210,.30);
+  --ok:#4CC38A;--warn:#D9A23C;--bad:#E5484D;--blue:#6CA6E0;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --mono:ui-monospace,'SF Mono',Menlo,monospace;
+  --sans:'Inter',-apple-system,system-ui,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{color:var(--fg);font-family:var(--sans);font-size:15px;font-feature-settings:'tnum';
+  max-width:520px;margin:0 auto;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top);
+  background:
+    radial-gradient(560px 480px at 50% -10%, rgba(94,106,210,.14), transparent 62%),
+    radial-gradient(440px 380px at -16% 44%, rgba(140,94,210,.08), transparent 64%),
+    radial-gradient(400px 340px at 112% 96%, rgba(94,140,210,.07), transparent 64%),
+    radial-gradient(ellipse at top, #0a0a0f 0%, #050506 52%, #020203 100%);
+  background-attachment:fixed}
+button,.bay,.chip,.baystate,.tick,.stpill,.del,nav,header,.lpill,.vanchip,.mhead,.vanbtn{
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+main{touch-action:pan-y}
+input,textarea{user-select:text;-webkit-user-select:text}
+input,textarea,select,button{font-family:inherit;font-size:inherit;color:inherit}
+input,textarea{background:var(--well);border:1px solid rgba(255,255,255,.10);border-radius:8px;
+  padding:10px 12px;width:100%;outline:none;font-size:16px;color:#f4f4f5}
+input::placeholder,textarea::placeholder{color:#5d626e}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(94,106,210,.15)}
+button{cursor:pointer;border:none;background:none;color:var(--fg)}
+
+header{padding:14px 16px 12px;border-bottom:1px solid var(--line);flex-shrink:0;position:relative;z-index:1}
+.hrow{display:flex;justify-content:space-between;align-items:baseline}
+.brand{font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--muted)}
+.brand b{font-weight:700;background:linear-gradient(to bottom,#fff,rgba(255,255,255,.7));
+  -webkit-background-clip:text;background-clip:text;color:transparent;margin-right:2px}
+.brand i{font-style:normal;font-family:var(--mono);font-size:9px;color:var(--faint);
+  letter-spacing:.1em;margin-left:6px;text-transform:uppercase}
+.hdate{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.shiftbar{margin-top:11px;height:5px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+.shiftbar i{display:block;height:100%;border-radius:999px;width:0;
+  background:linear-gradient(90deg,var(--accent),#8b93e8)}
+.shiftmeta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:5px}
+.shiftmeta .live{color:#aab2ff;font-weight:600}
+
+/* weather */
+.wx-bar{display:block;width:100%;margin-top:12px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(to bottom,rgba(255,255,255,.065),rgba(255,255,255,.018));
+  border:1px solid var(--line);
+  box-shadow:0 2px 16px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06)}
+.wx-panel{display:flex;align-items:center;gap:14px;width:100%;padding:12px 15px;
+  text-align:left;position:relative;overflow:hidden}
+.wx-glow{position:absolute;right:-46px;top:-66px;width:200px;height:200px;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(94,106,210,.16),transparent 70%)}
+.wx-temp{font-size:35px;font-weight:600;letter-spacing:-.045em;line-height:1;flex-shrink:0;
+  background:linear-gradient(to bottom,#fff,rgba(255,255,255,.6));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.wx-right{display:flex;flex-direction:column;gap:3px;min-width:0}
+.wx-cond{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.wx-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.wx-flag{margin-left:auto;flex-shrink:0;display:none;font-size:9px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:999px}
+.wx-bar.warm{border-color:rgba(217,162,60,.35)}
+.wx-bar.warm .wx-glow{background:radial-gradient(closest-side,rgba(217,162,60,.22),transparent 70%)}
+.wx-bar.warm .wx-temp{background:linear-gradient(to bottom,#ffd98a,#c48a18);-webkit-background-clip:text;background-clip:text}
+.wx-bar.warm .wx-flag{display:inline-block;color:#ffd98a;background:rgba(217,162,60,.1);border:1px solid rgba(217,162,60,.4)}
+.wx-bar.hot{border-color:rgba(229,72,77,.4)}
+.wx-bar.hot .wx-glow{background:radial-gradient(closest-side,rgba(229,72,77,.26),transparent 70%)}
+.wx-bar.hot .wx-temp{background:linear-gradient(to bottom,#ffb3b5,#c43038);-webkit-background-clip:text;background-clip:text}
+.wx-bar.hot .wx-flag{display:inline-block;color:#ffb3b5;background:rgba(229,72,77,.12);
+  border:1px solid rgba(229,72,77,.45);animation:pulse 2.2s ease-in-out infinite}
+.wx-bar.storm{border-color:rgba(108,166,224,.35)}
+.wx-bar.storm .wx-glow{background:radial-gradient(closest-side,rgba(108,166,224,.2),transparent 70%)}
+.wx-bar.storm .wx-flag{display:inline-block;color:#9cc5ec;background:rgba(108,166,224,.1);border:1px solid rgba(108,166,224,.4)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 104px;
+  position:relative;z-index:1}
+.tabpane{display:none}.tabpane.on{display:block}
+h2.sec{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.18em;
+  color:var(--muted);text-transform:uppercase;margin:20px 2px 10px}
+h2.sec:first-child{margin-top:4px}
+.card{background:linear-gradient(to bottom,rgba(255,255,255,.065),rgba(255,255,255,.018));
+  border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:11px;
+  box-shadow:0 2px 16px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.05)}
+.row2{display:flex;gap:9px}.row2>*{flex:1}
+.btn{background:var(--accent);color:#fff;font-weight:600;border-radius:8px;
+  padding:12px;width:100%;font-size:14px;letter-spacing:-.01em;
+  box-shadow:0 0 0 1px rgba(94,106,210,.5),0 4px 12px rgba(94,106,210,.26),inset 0 1px 0 rgba(255,255,255,.18)}
+.btn:active{background:var(--accent-b);transform:scale(.985)}
+.btn.ghost{background:var(--surface);color:var(--fg);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.05)}
+.btn.sm{width:auto;padding:9px 15px;font-size:12px}
+.empty{color:var(--faint);font-size:13px;text-align:center;padding:24px 0;
+  border:1px dashed rgba(255,255,255,.07);border-radius:12px}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.chip{font-size:12px;font-weight:500;padding:7px 13px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.chip:active{transform:scale(.97)}
+.chip.on{background:rgba(94,106,210,.15);border-color:var(--line-a);color:#aab2ff}
+
+.item{background:linear-gradient(to bottom,rgba(255,255,255,.055),rgba(255,255,255,.014));
+  border:1px solid var(--line);border-radius:13px;
+  padding:11px 13px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;
+  box-shadow:0 2px 10px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04)}
+.item.resolved{opacity:.38}
+.item.due{border-color:rgba(229,72,77,.4)}
+.item .body{flex:1;min-width:0}
+.item .top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.item .who{font-weight:600;font-size:14px;letter-spacing:-.01em}
+.item .van{font-family:var(--mono);font-size:11px;color:var(--blue)}
+.item .ts{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:auto}
+.tag{font-size:10px;font-weight:600;letter-spacing:.04em;padding:3px 9px;border-radius:999px;
+  color:#e9c27a;background:rgba(217,162,60,.10);border:1px solid rgba(217,162,60,.3)}
+.item .note{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5;word-wrap:break-word}
+.tick{width:30px;height:30px;border-radius:8px;border:1px solid var(--line-h);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:transparent;
+  font-size:14px;background:var(--surface)}
+.tick.on{background:rgba(76,195,138,.12);border-color:rgba(76,195,138,.45);color:var(--ok)}
+.del{color:var(--faint);font-size:18px;padding:2px 8px;flex-shrink:0}
+.del.minus{font-size:14px;font-family:var(--mono);border:1px solid var(--line);
+  border-radius:7px;padding:5px 11px;color:var(--muted)}
+.del.minus:active{border-color:rgba(229,72,77,.4);color:#ff9a9e}
+
+.stpill{font-size:11px;font-weight:600;padding:6px 12px;border-radius:999px;flex-shrink:0}
+.stpill:active{transform:scale(.96)}
+.st-watch,.st-pend{color:#e9c27a;background:rgba(217,162,60,.10);border:1px solid rgba(217,162,60,.35)}
+.st-disp{color:#ff9a9e;background:rgba(229,72,77,.12);border:1px solid rgba(229,72,77,.4)}
+.st-rec,.st-done{color:#7fdcae;background:rgba(76,195,138,.10);border:1px solid rgba(76,195,138,.35)}
+.st-out{color:#9cc5ec;background:rgba(108,166,224,.10);border:1px solid rgba(108,166,224,.35)}
+
+/* lot — compact 2-col grid, screenshot-friendly */
+.lot-head{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.lpill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;
+  padding:6px 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--muted)}
+.lpill b{font-size:13px;font-weight:700}
+.lot-head .btn.sm{margin-left:auto}
+.lot-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lot-section{grid-column:1/-1;display:flex;align-items:center;gap:9px;
+  font-family:var(--mono);font-size:9px;font-weight:700;
+  letter-spacing:.14em;color:var(--faint);text-transform:uppercase;padding:7px 2px 1px}
+.lot-section::after{content:'';flex:1;height:1px;background:var(--line)}
+.lot-section:first-child{padding-top:0}
+.bay{display:flex;flex-direction:column;gap:4px;
+  background:linear-gradient(to bottom,rgba(255,255,255,.045),rgba(255,255,255,.01));
+  border:1px solid var(--line);border-radius:10px;padding:7px 8px}
+.bay.is-dead{opacity:.32;pointer-events:none}
+.bay.is-trainer{border-color:rgba(229,72,77,.3);
+  background:linear-gradient(to bottom,rgba(229,72,77,.05),rgba(255,255,255,.01))}
+.bay-top{display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:15px}
+.bayid{font-family:var(--mono);font-weight:700;font-size:12px}
+.bay.is-trainer .bayid{color:var(--bad)}
+.bay-flags{display:flex;gap:3px}
+.bfl{font-size:8px;font-weight:700;padding:2px 4px;border-radius:4px;letter-spacing:.04em;line-height:1}
+.bfl-t{color:var(--bad);background:rgba(229,72,77,.1);border:1px solid rgba(229,72,77,.22)}
+.bfl-s{color:var(--blue);background:rgba(108,166,224,.1);border:1px solid rgba(108,166,224,.2)}
+.bfl-h,.bfl-f{color:#e9c27a;background:rgba(217,162,60,.1);border:1px solid rgba(217,162,60,.2)}
+.bfl-o{color:var(--bad);background:rgba(229,72,77,.1);border:1px solid rgba(229,72,77,.22)}
+.bay-ctl{display:flex;gap:4px}
+.vanbtn{flex:1.15;min-width:0;
+  font-family:'Helvetica Neue',Arial,var(--sans);font-feature-settings:'tnum';
+  font-size:11px;font-weight:600;
+  padding:7px 3px;border-radius:6px;border:1px dashed rgba(255,255,255,.13);
+  background:rgba(255,255,255,.02);color:#5d626e;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vanbtn.set{font-size:14px;font-weight:700;letter-spacing:.02em;
+  border:1.5px solid #fff;color:#fff;
+  background:rgba(74,125,171,.55);text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.vanbtn.set.is-dsp{border-color:#ffd24a;color:#1a1405;background:#ffd24a;text-shadow:none}
+.baystate{flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:7px 0;
+  border-radius:6px;text-align:center;border:1px solid var(--line);
+  background:var(--surface);color:#5d626e}
+.bs-ok{background:rgba(76,195,138,.10);border-color:rgba(76,195,138,.4);color:var(--ok)}
+.bs-nochg{background:rgba(217,162,60,.10);border-color:rgba(217,162,60,.4);color:#e9c27a}
+.bs-unplg{background:rgba(229,72,77,.12);border-color:rgba(229,72,77,.45);color:#ff9a9e}
+.bs-fixed{background:rgba(108,166,224,.10);border-color:rgba(108,166,224,.4);color:var(--blue)}
+
+/* adhoc display + edit */
+.who.sep{color:var(--faint);font-weight:400}
+.who.mono-id{font-family:var(--mono);color:#aab2ff;letter-spacing:.02em}
+.del.pencil{font-size:13px;border:1px solid var(--line);border-radius:6px;padding:5px 10px;color:var(--muted)}
+.del.pencil:active{border-color:var(--line-a);color:#aab2ff}
+.edit-row{display:flex;gap:6px;flex-wrap:wrap}
+.edit-row input{padding:8px 10px;font-size:14px;flex:1;min-width:90px}
+.edit-row input:first-child{font-family:var(--mono)}
+.edit-row .btn.sm{flex:0 0 auto}
+
+/* extras counters */
+.ext-totals{display:flex;gap:6px;flex-wrap:wrap}
+.lpill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;
+  padding:6px 11px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--muted)}
+.lpill b{font-size:13px;font-weight:700}
+.lpill.tp-acc{border-color:rgba(94,106,210,.4)}
+.lpill.tp-acc b{color:#aab2ff}
+.extrow{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.extc{display:inline-flex;align-items:center;gap:3px}
+.extchip{font-size:10px;font-weight:500;padding:5px 9px;border-radius:999px;
+  color:var(--faint);background:rgba(255,255,255,.025);border:1px dashed rgba(255,255,255,.1)}
+.extchip.has{color:#aab2ff;background:rgba(94,106,210,.1);border:1px solid rgba(94,106,210,.4)}
+.extchip b{font-family:var(--mono);font-size:11px}
+.extminus{width:20px;height:20px;border-radius:50%;font-size:13px;line-height:1;
+  color:var(--muted);background:var(--surface);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;padding:0}
+
+/* autocomplete hint */
+#ac-hint{position:fixed;z-index:400;display:none;max-width:92vw;
+  background:#101116;border:1px solid var(--line-a);border-radius:8px;
+  padding:8px 12px;font-size:13px;font-weight:500;color:var(--muted);
+  box-shadow:0 8px 24px rgba(0,0,0,.5);pointer-events:none}
+#ac-hint b{color:#aab2ff;font-weight:600}
+#ac-hint .ack{font-family:var(--mono);font-size:9px;color:var(--faint);
+  margin-left:8px;letter-spacing:.06em;text-transform:uppercase}
+
+/* drag hidden on touch; rescuer chip */
+.drag{display:none}
+.rsc{font-family:var(--mono);font-size:10px;font-weight:600;color:#9cc5ec;
+  background:rgba(108,166,224,.1);border:1px solid rgba(108,166,224,.3);
+  padding:2px 7px;border-radius:999px}
+
+/* picker sheet */
+#ovl{position:fixed;inset:0;background:rgba(2,2,3,.78);z-index:80;display:none}
+#ovl.open{display:block}
+#modal{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:520px;
+  background:#0b0b0e;border:1px solid var(--line);border-bottom:none;
+  border-radius:18px 18px 0 0;z-index:90;display:flex;flex-direction:column;max-height:72vh;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  box-shadow:0 -12px 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
+.mhead{display:flex;justify-content:space-between;align-items:center;
+  padding:15px 17px 12px;border-bottom:1px solid var(--line);flex-shrink:0}
+.mhead b{font-size:13px;font-weight:600;color:var(--muted)}
+.mhead b span{color:#aab2ff;font-family:var(--mono)}
+.mclose{color:var(--muted);font-size:17px;width:30px;height:30px;border-radius:7px;
+  background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.mbody{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 15px;touch-action:pan-y}
+.vgroup{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.18em;color:var(--faint);
+  text-transform:uppercase;margin:13px 2px 8px}
+.vgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.vgrid.wide{grid-template-columns:repeat(3,1fr)}
+.vanchip{font-family:var(--mono);font-size:12px;font-weight:600;padding:10px 0;
+  border-radius:7px;background:var(--surface);border:1px solid var(--line);
+  color:var(--fg);text-align:center}
+.vanchip:active{background:var(--surface-h)}
+.vanchip.used{opacity:.25}
+.vanchip.cur{background:rgba(94,106,210,.18);border-color:var(--line-a);color:#aab2ff}
+.vanchip.xdsp{color:#e9c27a;border-color:rgba(217,162,60,.3)}
+.mfoot{display:flex;gap:9px;padding:12px 15px 0;flex-shrink:0;border-top:1px solid var(--line)}
+.mfoot input{flex:1;font-family:var(--mono)}
+
+pre.eod{background:var(--well);border:1px solid var(--line);border-radius:12px;
+  padding:15px;font-family:var(--mono);font-size:12px;line-height:1.6;
+  white-space:pre-wrap;word-wrap:break-word;color:#d4d6da;
+  box-shadow:inset 0 2px 12px rgba(0,0,0,.4)}
+textarea.io{font-family:var(--mono);font-size:11px;height:88px}
+
+#toast{position:fixed;left:50%;bottom:106px;transform:translateX(-50%) translateY(14px);
+  background:#15151a;color:var(--fg);font-weight:600;font-size:13px;
+  padding:11px 19px;border-radius:10px;opacity:0;pointer-events:none;z-index:99;
+  max-width:88%;text-align:center;border:1px solid var(--line-a);
+  box-shadow:0 8px 28px rgba(0,0,0,.55);
+  transition:opacity .2s var(--ease),transform .2s var(--ease)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.alarm{border-color:rgba(229,72,77,.5);color:#ffb3b5}
+
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+  background:rgba(7,7,9,.97);border-top:1px solid var(--line);display:flex;z-index:50;
+  padding:7px 7px calc(8px + env(safe-area-inset-bottom))}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 0;color:#5d626e;position:relative;border-radius:10px;margin:0 2px}
+nav button .ic{font-size:17px;line-height:1}
+nav button .lb{font-size:9px;font-weight:600;letter-spacing:.08em}
+nav button.on{color:#aab2ff;background:rgba(94,106,210,.10);
+  box-shadow:inset 0 0 0 1px rgba(94,106,210,.22)}
+nav button .bdg{position:absolute;top:2px;right:16%;background:var(--bad);color:#fff;
+  font-family:var(--mono);font-size:9px;font-weight:700;border-radius:999px;padding:1px 5px;display:none}
+.sig{position:fixed;right:10px;bottom:calc(1px + env(safe-area-inset-bottom));
+  z-index:52;pointer-events:none;
+  font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.16)}
+.sig b{font-weight:600;color:rgba(170,178,255,.30)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="brand"><b>FR10</b> Dispatch Hub<i>DLV2</i></div>
+    <div class="hdate" id="hdate"></div>
+  </div>
+  <div class="shiftbar"><i id="shiftfill"></i></div>
+  <div class="shiftmeta"><span>11:00</span><span class="live" id="shiftleft"></span><span>21:00</span></div>
+  <div class="wx-bar" id="wx-bar">
+    <button class="wx-panel" onclick="fetchWeather(true)">
+      <div class="wx-glow"></div>
+      <span class="wx-temp" id="wx-temp">--°</span>
+      <span class="wx-right">
+        <span class="wx-cond" id="wx-cond">Loading weather…</span>
+        <span class="wx-meta" id="wx-meta">Spring Valley · DLV2</span>
+      </span>
+      <span class="wx-flag" id="wx-flag"></span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="tabpane on" id="pane-issues">
+  <h2 class="sec">Log an issue</h2>
+  <div class="card">
+    <div class="row2" style="margin-bottom:8px">
+      <input id="i-driver" placeholder="Driver" autocapitalize="words">
+      <input id="i-van" placeholder="Van — E12, V63" autocapitalize="characters" style="max-width:128px">
+    </div>
+    <div class="chips" id="i-cats"></div>
+    <textarea id="i-note" rows="2" placeholder="What happened — one line is fine"></textarea>
+    <button class="btn" style="margin-top:9px" onclick="addIssue()">Log it</button>
+  </div>
+  <h2 class="sec">Today's sheet</h2>
+  <div id="i-list"></div>
+  <span id="i-count" style="display:none"></span>
+</section>
+
+<section class="tabpane" id="pane-rescue">
+  <h2 class="sec">Extras on board</h2>
+  <div id="ext-totals" class="ext-totals"></div>
+  <h2 class="sec">Adhoc board</h2>
+  <div class="card">
+    <div class="row2">
+      <input id="a-route" placeholder="Adhoc / route ID" autocapitalize="characters">
+      <input id="a-driver" placeholder="Driver" autocapitalize="words">
+    </div>
+    <input id="a-van" placeholder="Van # — E12" autocapitalize="characters" style="margin-top:8px">
+    <button class="btn" style="margin-top:9px" onclick="addAdhoc()">Add adhoc</button>
+  </div>
+  <div id="a-list"></div>
+
+  <h2 class="sec">Rescue board</h2>
+  <div class="card">
+    <div class="row2">
+      <input id="rr-driver" placeholder="Driver" autocapitalize="words">
+      <input id="rr-van" placeholder="Van # — E12" autocapitalize="characters">
+    </div>
+    <button class="btn" style="margin-top:9px" onclick="addRescueRoute()">Add rescue driver</button>
+  </div>
+  <div id="rr-list"></div>
+
+  <h2 class="sec">Rescue watch board</h2>
+  <div class="card">
+    <div class="row2">
+      <input id="r-rescuer" placeholder="Rescuer (sent)" autocapitalize="words">
+      <input id="r-driver" placeholder="Driver (rescued)" autocapitalize="words">
+    </div>
+    <input id="r-note" placeholder="Route / reason" style="margin-top:8px">
+    <button class="btn" style="margin-top:9px" onclick="addRescue()">Add to board</button>
+  </div>
+  <div id="r-list"></div>
+
+  <h2 class="sec">Problem Solve board</h2>
+  <div class="card">
+    <div class="row2">
+      <input id="ps-rescuer" placeholder="Rescuer (sent)" autocapitalize="words">
+      <input id="ps-driver" placeholder="Driver (rescued)" autocapitalize="words">
+    </div>
+    <input id="ps-note" placeholder="Reason" style="margin-top:8px">
+    <button class="btn" style="margin-top:9px" onclick="addProblemSolve()">Add to board</button>
+  </div>
+  <div id="ps-list"></div>
+
+  <h2 class="sec">Rescue frequency</h2>
+  <div class="card">
+    <div style="display:flex;gap:8px">
+      <input id="rl-driver" placeholder="Log a rescue manually" autocapitalize="words" style="flex:1">
+      <button class="btn sm" onclick="manualRescueLog()">+ Log</button>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:7px">
+      Auto-logs on DISPATCHED · − removes an entry</div>
+  </div>
+  <div class="chips" id="rl-range"></div>
+  <div id="rl-list"></div>
+  <button class="btn ghost" style="margin-top:4px" onclick="exportRescueLog()">Export rescue report</button>
+</section>
+
+<section class="tabpane" id="pane-lot">
+  <div class="lot-head">
+    <span class="lpill"><b id="l-ok" style="color:var(--ok)">0</b> OK</span>
+    <span class="lpill"><b id="l-nochg" style="color:var(--warn)">0</b> NC</span>
+    <span class="lpill"><b id="l-unplg" style="color:var(--bad)">0</b> UN</span>
+    <button class="btn ghost sm" onclick="resetLot()">Reset</button>
+  </div>
+  <div class="lot-grid" id="l-list"></div>
+</section>
+
+<section class="tabpane" id="pane-remind">
+  <h2 class="sec">New reminder</h2>
+  <div class="card">
+    <input id="m-title" placeholder="Remind me to…" style="margin-bottom:9px">
+    <div class="row2">
+      <input id="m-date" type="date">
+      <input id="m-time" type="time">
+    </div>
+    <div class="chips" id="m-quick"></div>
+    <button class="btn" style="margin-top:4px" onclick="addReminder()">Set reminder</button>
+  </div>
+  <div style="font-size:11px;color:var(--faint);margin-bottom:10px;line-height:1.5;padding:0 2px">
+    Alerts fire while the app is open. Tap 📅 on any reminder for a real iPhone Calendar notification.</div>
+  <h2 class="sec">Upcoming</h2>
+  <div id="m-list"></div>
+</section>
+
+<section class="tabpane" id="pane-misc">
+  <h2 class="sec">Miscellaneous Notes</h2>
+  <div class="card" style="display:flex;flex-direction:column">
+    <textarea id="misc-notes" rows="14" placeholder="Anything worth mentioning — drivers, concerns, feedback…"
+      style="resize:none;line-height:1.6;font-size:15px"></textarea>
+    <button class="btn ghost" style="margin-top:10px" onclick="copyMisc()">Copy notes</button>
+  </div>
+</section>
+
+<section class="tabpane" id="pane-eod">
+  <h2 class="sec">Extras for tomorrow (AM)</h2>
+  <div class="card">
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="x-name" placeholder="Driver name" autocapitalize="words" style="flex:1">
+      <button class="btn sm" onclick="addExtra()">+ Add</button>
+    </div>
+    <div class="chips" id="x-list" style="margin-bottom:0;margin-top:9px"></div>
+  </div>
+
+  <h2 class="sec">Nightly notes — copy into Hera</h2>
+  <pre class="eod" id="eod-text"></pre>
+  <button class="btn" style="margin-top:10px" onclick="copyEOD()">Copy notes</button>
+  <button class="btn ghost" style="margin-top:8px" onclick="refreshEOD();toast('Refreshed')">Refresh</button>
+
+  <h2 class="sec">Backup &amp; restore</h2>
+  <div class="card">
+    <div style="font-size:11px;color:var(--faint);margin-bottom:9px;line-height:1.5">
+      Saves automatically on this device. Export before phone swaps or to sync with the desktop version.</div>
+    <div class="row2">
+      <button class="btn ghost" onclick="exportData()">Export backup</button>
+      <button class="btn ghost" onclick="document.getElementById('io-wrap').style.display='block'">Import</button>
+    </div>
+    <div id="io-wrap" style="display:none;margin-top:8px">
+      <textarea id="io-box" class="io" placeholder="Paste backup JSON here"></textarea>
+      <button class="btn sm" style="margin-top:7px" onclick="importData()">Restore</button>
+    </div>
+  </div>
+  <span id="save-dot" style="display:none"></span>
+</section>
+
+</main>
+
+<div id="ovl"></div>
+<div id="modal" style="display:none">
+  <div class="mhead"><b>Assign van — <span id="sh-bay"></span></b>
+    <button class="mclose" onclick="closePicker()">×</button></div>
+  <div class="mbody" id="sh-body"></div>
+  <div class="mfoot">
+    <input id="sh-custom" placeholder="Other / custom…" autocapitalize="characters">
+    <button class="btn sm" onclick="assignVan(document.getElementById('sh-custom').value)">Set</button>
+    <button class="btn sm ghost" onclick="assignVan('')">Clear</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div class="sig">Created by <b>Solis</b></div>
+
+<nav>
+  <button class="on" data-tab="issues"><span class="ic">⚠︎</span><span class="lb">ISSUES</span><span class="bdg" id="b-issues"></span></button>
+  <button data-tab="rescue"><span class="ic">⛑</span><span class="lb">ROUTES</span><span class="bdg" id="b-rescue"></span></button>
+  <button data-tab="lot"><span class="ic">⚡︎</span><span class="lb">LOT</span></button>
+  <button data-tab="remind"><span class="ic">⏰</span><span class="lb">REMIND</span><span class="bdg" id="b-remind"></span></button>
+  <button data-tab="misc"><span class="ic">✎</span><span class="lb">MISC</span></button>
+  <button data-tab="eod"><span class="ic">☰</span><span class="lb">EOD</span></button>
+</nav>
+
+<script>
+/* gesture guards — viewer apps must not hijack taps */
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('gesturechange',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+let _lt=0;
+document.addEventListener('touchend',e=>{
+  const n=Date.now();
+  if(n-_lt<350&&e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA')e.preventDefault();
+  _lt=n;
+},{passive:false});
+document.addEventListener('contextmenu',e=>{
+  if(e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA')e.preventDefault();
+});
+
+/* ============================================================
+   FR10 Dispatch Hub — shared core (desktop + mobile)
+   Performance model: build DOM once, mutate in place.
+   ============================================================ */
+'use strict';
+
+/* ---------- helpers ---------- */
+function el(id){return document.getElementById(id);}
+function v(id){return el(id).value.trim();}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+const DRIVERS=["Adrian Ramirez","Braxton Hollaway","Alexa Rivas","Alexis Lea","Isaiha Solis","Analisa Gardea","Anthony Alvarez","April Anderson","Ariana Yepez","Ariel Roy","Augustine Lopez","Bradley Farina","Brandon Duck","Brandon Contreras","Brendan Smith","Cameron Love","Carla Galvan","Carrie Randle","Christopher Yepes","Cordero Bernal","Corina Quinn","Dajohn Naquin","Daniel Glaves","Darbii Dixon","David Hartman","David Lopez","David Jones","David Rocha","Deon Clayvon","Destiny Bradford","Devann Anderson","Devon Green","Dijon Harris","Dominique Herrera","Donovan Nash","Dorian Stewart","Edgar Guevara","Edward Miller","Elizabeth Spraggins","Gabriel Santos","Gaetano Reeder","Gavin Butler","Hector Nunez","Jacquaz Hall","James Fortier","Jasmin Lashomb","Jason Mckinney","Jeff Li","Jerico Marquez","Jessica Munoz","Jesus Hernandez","Jim Langston jr.","Joey Lizaola","John Dykes","Jon Nicdao","Jonathan Chivers","Jordan Cole","Jose Torres","Joseph Caravella","Joseph Garcia","Joshen Thomas","Joshua Kelly","Joshua Prybil","Josue Marin","Joy Chipimarquez","Karla Chavez","Katie MacKenzie","Kavianna Kitch","Keianna Johnson","Keith Kiple","Ken Zavala","Lavonte Dorsey","Lawrence CampaJacques","Leslie Cassels","Linden Anderson","Luis Pineda","Manuel Maya","Mariama ONeal","Michael Dobbs","Nataly Villela","Omar Gutierrez Jr","Pashaun Ford","Patricia Torres","Pete Conroy","Prisilla Lopez","Rashod Thompson","Ricardo Trujillo","Ricardo Chavez","Rose Haley","Samnang Prak","Sanaa Wilson Manuel","Saniah Marlowe","Shiekko Griffin","Solomon Dearing","Steven Rorvik","Talmadge Dunn","Tanya Calibuso","Thomas Green","Trent Brazier","Tyler Huebert","Tyrone Burks","Veronica Ramos","Vladimir Chirino","Warren Untalan","Youngil Pearson","Zion Ratliff"];
+function normName(s){
+  const t=s.trim().replace(/\s+/g,' ');
+  const hit=DRIVERS.find(d=>d.toLowerCase()===t.toLowerCase());
+  if(hit)return hit;
+  return t.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+}
+function nameCandidates(typed){
+  const q=typed.trim().toLowerCase();
+  if(q.length<2)return [];
+  return DRIVERS.filter(d=>d.toLowerCase().startsWith(q)).sort();
+}
+function pad(n){return String(n).padStart(2,'0');}
+let toastTimer=null;
+function toast(msg,alarm){
+  const t=el('toast');t.textContent=msg;t.className='show'+(alarm?' alarm':'');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='',alarm?4500:2000);
+}
+
+/* ---------- storage ---------- */
+const DB_KEY='fr10.dispatchhub.v1';
+function todayKey(){
+  const n=new Date();
+  // LOCAL calendar date (not UTC). toISOString() is UTC and rolls over at
+  // 4-5pm Pacific, which previously caused evening/after-sleep "resets".
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+}
+function blankDay(){return {issues:[],rescues:[],adhocs:[],lot:{},extras:[],track:[],rescueRoutes:[],problemSolve:[],misc:''};}
+let db={days:{},reminders:[],rescueLog:[],selCat:'Vehicle',rlRange:7};
+try{const r=localStorage.getItem(DB_KEY);if(r)db=Object.assign(db,JSON.parse(r));}catch(e){}
+if(!db.rescueLog)db.rescueLog=[];
+if(!db.issueLog)db.issueLog=[];
+if(!db.rlRange)db.rlRange=7;
+if(!db.days[todayKey()])db.days[todayKey()]=blankDay();
+let day=db.days[todayKey()];
+if(!day.adhocs)day.adhocs=[];
+if(!day.rescueRoutes)day.rescueRoutes=[];
+if(!day.problemSolve)day.problemSolve=[];
+if(!day.extras)day.extras=[];
+if(!day.track)day.track=[];
+(function prune(){
+  const cut=new Date(Date.now()-90*864e5).toISOString().slice(0,10);
+  Object.keys(db.days).forEach(k=>{if(k<cut)delete db.days[k];});
+  const cutTs=Date.now()-92*864e5;
+  db.rescueLog=db.rescueLog.filter(r=>r.ts>=cutTs);
+  const cutIssue=Date.now()-31*864e5;
+  db.issueLog=(db.issueLog||[]).filter(r=>r.ts>=cutIssue);
+})();
+
+let saveTimer=null,saveDirty=false;
+function persist(){
+  try{
+    localStorage.setItem(DB_KEY,JSON.stringify(db));
+    const d=el('save-dot');
+    if(d){d.classList.add('saved');setTimeout(()=>d.classList.remove('saved'),1600);}
+    return true;
+  }catch(e){toast('Storage full — export a backup');return false;}
+}
+function flushSave(){
+  if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
+  if(saveDirty){saveDirty=false;persist();}
+}
+function save(){
+  saveDirty=true;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{saveTimer=null;saveDirty=false;persist();},250);
+}
+/* Merge stored state into memory WITHOUT ever losing data.
+   Union of days from both sources; per-day, the version with more content wins.
+   This makes wake-from-sleep, multi-tab, and rollover all safe — a blank or
+   stale copy can never overwrite a populated day. */
+function dayWeight(dy){
+  if(!dy)return -1;
+  return (dy.issues?dy.issues.length:0)+(dy.rescues?dy.rescues.length:0)+
+         (dy.adhocs?dy.adhocs.length:0)+(dy.extras?dy.extras.length:0)+
+         (dy.track?dy.track.length:0)+(dy.lot?Object.keys(dy.lot).length:0)+
+         ((dy.misc&&dy.misc.trim())?1:0);
+}
+function reconcileFromStorage(){
+  let fresh=null;
+  try{const raw=localStorage.getItem(DB_KEY);if(raw)fresh=JSON.parse(raw);}catch(e){}
+  if(!fresh||!fresh.days)return false;
+  // top-level arrays: take the longer/union where it matters
+  if(Array.isArray(fresh.reminders)&&fresh.reminders.length>=(db.reminders||[]).length)db.reminders=fresh.reminders;
+  if(Array.isArray(fresh.rescueLog)&&fresh.rescueLog.length>=(db.rescueLog||[]).length)db.rescueLog=fresh.rescueLog;
+  if(Array.isArray(fresh.issueLog)&&fresh.issueLog.length>=(db.issueLog||[]).length)db.issueLog=fresh.issueLog;
+  if(fresh.selCat)db.selCat=fresh.selCat;
+  if(fresh.rlRange)db.rlRange=fresh.rlRange;
+  // days: union; for shared keys keep whichever holds more work
+  db.days=db.days||{};
+  Object.keys(fresh.days).forEach(k=>{
+    if(!(k in db.days)||dayWeight(fresh.days[k])>=dayWeight(db.days[k]))db.days[k]=fresh.days[k];
+  });
+  return true;
+}
+function ensureDay(){
+  const tk=todayKey();
+  if(!db.days[tk])db.days[tk]=blankDay();
+  day=db.days[tk];
+  if(!day.adhocs)day.adhocs=[];
+  if(!day.rescueRoutes)day.rescueRoutes=[];
+  if(!day.problemSolve)day.problemSolve=[];
+  if(!day.extras)day.extras=[];
+  if(!day.track)day.track=[];
+  if(!day.lot)day.lot={};
+  return tk;
+}
+/* never lose the last action to sleep, tab discard, or close */
+window.addEventListener('pagehide',flushSave);
+window.addEventListener('beforeunload',flushSave);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){flushSave();return;}
+  // Becoming visible (Mac woke / tab refocused): flush any pending write FIRST so we
+  // never read stale storage, then reconcile (union-merge, never destructive),
+  // re-point at today, and repaint. No blank day can clobber real work.
+  flushSave();
+  reconcileFromStorage();
+  activeDayKey=ensureDay();
+  renderAll();if(typeof updateExtTotals==='function')updateExtTotals();
+});
+window.addEventListener('focus',()=>{if(typeof tickClock==='function')tickClock();});
+setInterval(flushSave,30000);
+
+/* ---------- constants ---------- */
+const FLEET_E=Array.from({length:26},(_,i)=>'E'+pad(i+1));
+const FLEET_FREDV=Array.from({length:15},(_,i)=>'FREDV'+pad(i+1));
+const CATS=['Vehicle','Route','Pace/Late','Device','Behavior','Injury','Health Issue Reported','Adhoc','Callout','Other'];
+const RSTATES=[['disp','DISPATCHED'],['rec','PICKED UP'],['watch','COMPLETE']];
+const ASTATES=[['pend','PENDING'],['out','ON ROAD'],['done','DONE']];
+
+function lotLayout(){
+  const L=[];const hub=(a,b)=>'Hub '+a.slice(2)+'/'+b.slice(2);
+  L.push({type:'sec',label:'Trainer'});
+  L.push({id:'A086',trainer:true},{id:'A087',trainer:true});
+  L.push({type:'sec',label:'Standard · A088–A112'});
+  [['A088','A089'],['A090','A091'],['A092','A093'],['A094','A095'],['A096','A097'],['A098','A099']]
+    .forEach(([a,b])=>{L.push({id:a,std:true},{id:b,std:true})});
+  L.push({id:'A100',std:true});
+  L.push({id:'A101',std:true},{id:'A102',std:true});
+  L.push({id:'A103',std:true},{id:'A104',std:true});
+  L.push({id:'A105',half:true,std:true},{id:'A106',half:true,std:true});
+  L.push({id:'A107',half:true,std:true},{id:'A108',half:true,std:true});
+  L.push({id:'A109',std:true},{id:'A110',std:true});
+  L.push({id:'A111',std:true},{id:'A112',std:true});
+  L.push({type:'sec',label:'Supercharger · A113–A120'});
+  ['A113','A114','A115','A116','A117'].forEach(id=>L.push({id,sc:true}));
+  L.push({id:'A118',sc:true,flaky:true});
+  L.push({id:'A119',sc:true,down:true});
+  L.push({id:'A120',sc:true,down:true});
+  return L;
+}
+const LOT=lotLayout();
+const CYCLE_STD=['ok','nochg','unplg'];
+const CYCLE_OTHER=['','ok','nochg','unplg'];
+const LLBL={'':'TAP','ok':'OK ✓','nochg':'NO CHG','unplg':'UNPLG'};
+function bayState(b){
+  const rec=day.lot[b.id];
+  if(rec&&rec.touched)return rec.st||'';
+  return b.std?'ok':'';
+}
+
+/* ---------- clock ---------- */
+let activeDayKey=todayKey();
+function tickClock(){
+  const tk=todayKey();
+  if(tk!==activeDayKey){
+    // Real local-date rollover. Reconcile (union-merge, non-destructive) so a prior
+    // day is never lost, then point at today. Do NOT blank-save over anything.
+    reconcileFromStorage();
+    activeDayKey=ensureDay();
+    renderAll();
+    if(typeof updateExtTotals==='function')updateExtTotals();
+    flushSave();
+    toast('New day started — yesterday\u2019s sheet is saved in history (90 days)');
+  }
+  const n=new Date();
+  const hd=el('hdate'),bc=el('big-clock');
+  if(bc){
+    bc.textContent=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+    if(hd)hd.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  }else if(hd){
+    hd.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+
+    ' · '+n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }
+  const s=new Date(n);s.setHours(11,0,0,0);const e=new Date(n);e.setHours(21,0,0,0);
+  let pct=(n-s)/(e-s)*100;pct=Math.max(0,Math.min(100,pct));
+  el('shiftfill').style.width=pct+'%';
+  const lbl=el('shiftleft');
+  if(n<s)lbl.textContent='starts 11:00';
+  else if(n>e)lbl.textContent='complete';
+  else{const m=Math.round((e-n)/60000);lbl.textContent=Math.floor(m/60)+'h '+pad(m%60)+'m left';}
+}
+
+/* ---------- tabs ---------- */
+function switchTab(name){
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+name));
+  if(name==='eod')refreshEOD();
+}
+
+/* ---------- badges ---------- */
+function badges(){
+  const sets=[
+    ['b-issues',day.issues.filter(i=>!i.resolved).length],
+    ['b-rescue',day.rescues.filter(r=>r.st!=='watch').length+day.adhocs.filter(a=>a.st!=='done').length],
+    ['b-remind',db.reminders.filter(r=>!r.done&&r.due<=Date.now()).length]
+  ];
+  sets.forEach(([id,n])=>{const b=el(id);if(b){b.style.display=n?'':'none';b.textContent=n;}});
+  const ic=el('i-count');
+  if(ic){const o=day.issues.filter(i=>!i.resolved).length;ic.textContent=o?o+' open':'all clear';}
+}
+
+/* ---------- category chips ---------- */
+function renderCats(){
+  const w=el('i-cats');w.textContent='';
+  CATS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='chip'+(db.selCat===c?' on':'');b.textContent=c;
+    b.onclick=()=>{db.selCat=c;
+      w.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.textContent===c));save();};
+    w.appendChild(b);
+  });
+}
+
+/* ---------- issues (in-place toggles) ---------- */
+function issueEl(it){
+  const e=document.createElement('div');
+  e.className='item'+(it.resolved?' resolved':'');
+  e.innerHTML='<button class="tick'+(it.resolved?' on':'')+'">✓</button>'+
+    '<div class="body"><div class="top"><span class="who">'+esc(it.driver)+'</span>'+
+    (it.van?'<span class="van">'+esc(it.van)+'</span>':'')+
+    '<span class="tag">'+esc(it.cat)+'</span>'+
+    '<span class="ts">'+fmtTime(it.ts)+'</span></div>'+
+    (it.note?'<div class="note">'+esc(it.note)+'</div>':'')+
+    '</div><button class="del">×</button>';
+  const tick=e.querySelector('.tick');
+  tick.onclick=()=>{
+    it.resolved=!it.resolved;
+    e.classList.toggle('resolved',it.resolved);
+    tick.classList.toggle('on',it.resolved);
+    badges();save();
+  };
+  e.querySelector('.del').onclick=()=>{
+    day.issues=day.issues.filter(x=>x.id!==it.id);
+    e.remove();if(!day.issues.length)renderIssues();
+    badges();save();
+  };
+  return e;
+}
+function renderIssues(){
+  const w=el('i-list');w.textContent='';
+  if(!day.issues.length){w.innerHTML='<div class="empty">Nothing logged yet — clean board.</div>';return;}
+  const f=document.createDocumentFragment();
+  day.issues.forEach(it=>f.appendChild(issueEl(it)));
+  w.appendChild(f);
+}
+function addIssue(){
+  const d=v('i-driver'),vn=v('i-van').toUpperCase(),n=v('i-note');
+  if(!d&&!n){toast('Need at least a driver or a note');return;}
+  const now=Date.now();
+  const it={id:now,driver:d||'—',van:vn,cat:db.selCat,note:n,ts:now,resolved:false};
+  day.issues.unshift(it);
+  // permanent 30-day archive — survives clear/save-day
+  db.issueLog.push({id:now,driver:d||'—',van:vn,cat:db.selCat,note:n,ts:now});
+  ['i-driver','i-van','i-note'].forEach(id=>el(id).value='');
+  el('i-driver').focus();
+  const w=el('i-list');
+  if(day.issues.length===1)w.textContent='';
+  w.insertBefore(issueEl(it),w.firstChild);
+  renderIssueArchive();badges();save();toast('Logged '+fmtTime(it.ts));
+}
+
+/* ---------- 30-day issue archive (persists across day-clears) ---------- */
+function issueArchiveRows(){
+  const cut=Date.now()-30*864e5;
+  return (db.issueLog||[]).filter(r=>r.ts>=cut).sort((a,b)=>b.ts-a.ts);
+}
+function fmtArchiveDate(ts){
+  return new Date(ts).toLocaleDateString('en-US',{month:'numeric',day:'numeric'})+
+    ' '+new Date(ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+function renderIssueArchive(){
+  const w=el('ia-list');if(!w)return;
+  const rows=issueArchiveRows();
+  const cnt=el('ia-count');if(cnt)cnt.textContent=rows.length?rows.length+' in last 30 days':'';
+  w.textContent='';
+  if(!rows.length){w.innerHTML='<div class="empty">No issues archived in the last 30 days.</div>';return;}
+  const f=document.createDocumentFragment();
+  rows.forEach(r=>{
+    const e=document.createElement('div');e.className='item';
+    e.innerHTML='<div class="body"><div class="top"><span class="who">'+esc(r.driver)+'</span>'+
+      (r.van?'<span class="van">'+esc(r.van)+'</span>':'')+
+      '<span class="tag">'+esc(r.cat)+'</span>'+
+      '<span class="ts">'+fmtArchiveDate(r.ts)+'</span></div>'+
+      (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
+      '</div><button class="del">×</button>';
+    e.querySelector('.del').onclick=()=>{
+      db.issueLog=db.issueLog.filter(x=>x.id!==r.id);
+      renderIssueArchive();save();
+    };
+    f.appendChild(e);
+  });
+  w.appendChild(f);
+}
+function exportIssueArchive(){
+  const rows=issueArchiveRows();
+  const lines=['FR10 ISSUE ARCHIVE — last 30 days',
+    'Generated '+new Date().toLocaleDateString('en-US')+' by Isaiha',''];
+  if(!rows.length)lines.push('No issues in this window.');
+  else rows.forEach(r=>lines.push(fmtArchiveDate(r.ts)+' — '+r.driver+(r.van?' / '+r.van:'')+' ['+r.cat+']'+(r.note?': '+r.note:'')));
+  copyText(lines.join('\n'),'30-day issue archive copied');
+}
+
+/* ---------- adhocs ---------- */
+function adhocEl(a){
+  const e=document.createElement('div');e.className='item';
+  e.dataset.id=a.id;
+  const handle=mkHandle(e);
+  const pill=document.createElement('button');pill.className='stpill';
+  const delBtn=document.createElement('button');delBtn.className='del';delBtn.textContent='×';
+  const editBtn=document.createElement('button');editBtn.className='del pencil';editBtn.textContent='✎';editBtn.title='Edit';
+  const body=document.createElement('div');body.className='body';
+  const bc=document.createElement('div');
+  body.appendChild(bc);
+  body.appendChild(mkExtRow(a));
+
+  const paintPill=()=>{
+    const idx=ASTATES.findIndex(x=>x[0]===a.st);
+    pill.className='stpill st-'+a.st;pill.textContent=ASTATES[idx][1];
+  };
+  const paintBody=()=>{
+    bc.innerHTML='<div class="top"><span class="who mono-id">'+esc(a.route)+'</span>'+
+      (a.driver?'<span class="who sep">·</span><span class="who">'+esc(a.driver)+'</span>':'')+
+      (a.van?'<span class="van">'+esc(a.van)+'</span>':'')+
+      '<span class="ts">'+fmtTime(a.ts)+'</span></div>';
+  };
+  const startEdit=()=>{
+    bc.innerHTML='';
+    const row=document.createElement('div');row.className='edit-row';
+    const ri=document.createElement('input');ri.value=a.route;ri.placeholder='Route ID';
+    const di=document.createElement('input');di.value=a.driver||'';di.placeholder='Driver';attachNameAC(di);
+    const ok=document.createElement('button');ok.className='btn sm';ok.textContent='Save';
+    row.appendChild(ri);row.appendChild(di);row.appendChild(ok);
+    bc.appendChild(row);
+    ri.focus();ri.select();
+    const commit=()=>{
+      const nr=ri.value.trim().toUpperCase();
+      if(!nr){toast('Route ID needed');ri.focus();return;}
+      a.route=nr;a.driver=di.value.trim();
+      paintBody();save();toast('Updated '+a.route);
+    };
+    ok.onclick=commit;
+    [ri,di].forEach(inp=>inp.addEventListener('keydown',ev=>{
+      if(ev.key==='Enter'){ev.preventDefault();commit();}
+      if(ev.key==='Escape'){ev.preventDefault();paintBody();}
+    }));
+  };
+
+  paintBody();paintPill();
+  pill.onclick=()=>{
+    const idx=ASTATES.findIndex(x=>x[0]===a.st);
+    a.st=ASTATES[(idx+1)%3][0];paintPill();badges();save();
+  };
+  editBtn.onclick=startEdit;
+  delBtn.onclick=()=>{
+    day.adhocs=day.adhocs.filter(x=>x.id!==a.id);
+    e.remove();if(!day.adhocs.length)renderAdhocs();
+    badges();updateExtTotals();save();
+  };
+  e.appendChild(handle);e.appendChild(body);e.appendChild(pill);e.appendChild(editBtn);e.appendChild(delBtn);
+  return e;
+}
+function renderAdhocs(){
+  const w=el('a-list');w.textContent='';
+  if(!day.adhocs.length){w.innerHTML='<div class="empty">No adhocs on the board.</div>';return;}
+  const f=document.createDocumentFragment();
+  day.adhocs.forEach(a=>f.appendChild(adhocEl(a)));
+  w.appendChild(f);
+}
+function addAdhoc(){
+  const r=v('a-route').toUpperCase(),d=v('a-driver');
+  const vn=el('a-van')?v('a-van').toUpperCase():'';
+  if(!r){toast('Adhoc / route ID needed');return;}
+  const a={id:Date.now(),route:r,driver:d,van:vn,ts:Date.now(),st:'pend'};
+  day.adhocs.unshift(a);
+  el('a-route').value='';el('a-driver').value='';if(el('a-van'))el('a-van').value='';el('a-route').focus();
+  const w=el('a-list');
+  if(day.adhocs.length===1)w.textContent='';
+  w.insertBefore(adhocEl(a),w.firstChild);
+  badges();save();
+}
+
+/* ---------- driver-name autocomplete (spacebar completes) ---------- */
+function acHintEl(){
+  let h=el('ac-hint');
+  if(!h){h=document.createElement('div');h.id='ac-hint';document.body.appendChild(h);}
+  return h;
+}
+function acShow(inp){
+  const h=acHintEl();
+  const cands=nameCandidates(inp.value);
+  const exact=cands.length===1&&cands[0].toLowerCase()===inp.value.trim().toLowerCase();
+  if(!cands.length||exact){h.style.display='none';return;}
+  const r=inp.getBoundingClientRect();
+  h.style.left=Math.max(8,r.left)+'px';
+  h.style.top=(r.bottom+4)+'px';
+  if(cands.length===1){
+    h.innerHTML='<b>'+esc(cands[0])+'</b><span class="ack">␣ completes</span>';
+  }else{
+    h.innerHTML=cands.slice(0,3).map(c=>esc(c)).join(' · ')+
+      (cands.length>3?' <span class="ack">+'+(cands.length-3)+'</span>':'')+
+      '<span class="ack">keep typing</span>';
+  }
+  h.style.display='block';
+}
+function acHide(){const h=el('ac-hint');if(h)h.style.display='none';}
+function attachNameAC(inp){
+  if(!inp||inp.dataset.ac)return;
+  inp.dataset.ac='1';
+  inp.setAttribute('autocomplete','off');
+  inp.setAttribute('autocorrect','off');   /* stop iOS rewriting names on space */
+  inp.setAttribute('spellcheck','false');
+  inp.addEventListener('input',()=>acShow(inp));
+  inp.addEventListener('focus',()=>acShow(inp));
+  inp.addEventListener('blur',()=>setTimeout(acHide,120));
+  inp.addEventListener('keydown',e=>{
+    if(e.key!==' ')return;
+    const typed=inp.value.trim();
+    if(!typed)return;
+    const cands=nameCandidates(typed);
+    if(cands.length===1&&cands[0].toLowerCase()!==typed.toLowerCase()){
+      e.preventDefault();
+      inp.value=cands[0];
+      acHide();
+      inp.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  });
+}
+
+/* ---------- rescue routes board ---------- */
+function rrEl(a){
+  const e=document.createElement('div');e.className='item';e.dataset.id=a.id;
+  const handle=mkHandle(e);
+  const pill=document.createElement('button');pill.className='stpill';
+  const delBtn=document.createElement('button');delBtn.className='del';delBtn.textContent='×';
+  const editBtn=document.createElement('button');editBtn.className='del pencil';editBtn.textContent='✎';editBtn.title='Edit';
+  const body=document.createElement('div');body.className='body';
+  const bc=document.createElement('div');body.appendChild(bc);body.appendChild(mkExtRow(a));
+  const paintPill=()=>{const idx=ASTATES.findIndex(x=>x[0]===a.st);pill.className='stpill st-'+a.st;pill.textContent=ASTATES[idx][1];};
+  const paintBody=()=>{bc.innerHTML='<div class="top"><span class="who mono-id">RESCUE</span>'+
+    (a.driver?'<span class="who sep">·</span><span class="who">'+esc(a.driver)+'</span>':'')+
+    (a.van?'<span class="van">'+esc(a.van)+'</span>':'')+
+    '<span class="ts">'+fmtTime(a.ts)+'</span></div>';};
+  const startEdit=()=>{
+    bc.innerHTML='';const row=document.createElement('div');row.className='edit-row';
+    const di=document.createElement('input');di.value=a.driver||'';di.placeholder='Driver';attachNameAC(di);
+    const vi=document.createElement('input');vi.value=a.van||'';vi.placeholder='Van #';
+    const ok=document.createElement('button');ok.className='btn sm';ok.textContent='Save';
+    row.appendChild(di);row.appendChild(vi);row.appendChild(ok);bc.appendChild(row);di.focus();
+    const commit=()=>{const nd=di.value.trim();if(!nd){toast('Driver name needed');return;}a.driver=nd;a.van=vi.value.trim().toUpperCase();paintBody();save();toast('Updated '+nd);};
+    ok.onclick=commit;[di,vi].forEach(inp=>inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();commit();}if(ev.key==='Escape'){ev.preventDefault();paintBody();}}));
+  };
+  paintBody();paintPill();
+  pill.onclick=()=>{const idx=ASTATES.findIndex(x=>x[0]===a.st);a.st=ASTATES[(idx+1)%3][0];paintPill();badges();save();};
+  editBtn.onclick=startEdit;
+  delBtn.onclick=()=>{day.rescueRoutes=day.rescueRoutes.filter(x=>x.id!==a.id);e.remove();if(!day.rescueRoutes.length)renderRescueRoutes();badges();updateExtTotals();save();};
+  e.appendChild(handle);e.appendChild(body);e.appendChild(pill);e.appendChild(editBtn);e.appendChild(delBtn);return e;
+}
+function renderRescueRoutes(){const w=el('rr-list');if(!w)return;w.textContent='';if(!day.rescueRoutes.length){w.innerHTML='<div class="empty">No rescue drivers on the board.</div>';return;}const fr=document.createDocumentFragment();day.rescueRoutes.forEach(a=>fr.appendChild(rrEl(a)));w.appendChild(fr);}
+function addRescueRoute(){const d=v('rr-driver');const vn=el('rr-van')?v('rr-van').toUpperCase():'';if(!d){toast('Driver name needed');return;}const a={id:Date.now(),driver:d,van:vn,ts:Date.now(),st:'pend'};day.rescueRoutes.unshift(a);el('rr-driver').value='';if(el('rr-van'))el('rr-van').value='';el('rr-driver').focus();const w=el('rr-list');if(day.rescueRoutes.length===1)w.textContent='';w.insertBefore(rrEl(a),w.firstChild);badges();save();}
+
+/* ---------- rescues ---------- */
+function rescueEl(r){
+  const e=document.createElement('div');e.className='item';
+  e.dataset.id=r.id;
+  const pill=document.createElement('button');pill.className='stpill';
+  const editBtn=document.createElement('button');editBtn.className='del pencil';editBtn.textContent='✎';editBtn.title='Edit / assign rescuer';
+  const delBtn=document.createElement('button');delBtn.className='del';delBtn.textContent='×';
+  const body=document.createElement('div');body.className='body';
+  const bc=document.createElement('div');
+  body.appendChild(bc);
+  const handle=mkHandle(e);
+
+  const paintPill=()=>{
+    const idx=RSTATES.findIndex(x=>x[0]===r.st);
+    pill.className='stpill st-'+r.st;pill.textContent=RSTATES[idx][1];
+  };
+  const paintBody=()=>{
+    bc.innerHTML='<div class="top"><span class="who">'+esc(r.driver)+'</span>'+
+      (r.rescuer?'<span class="rsc" title="Rescuer">⛑ '+esc(r.rescuer)+'</span>':'')+
+      '<span class="ts">'+fmtTime(r.ts)+'</span></div>'+
+      (r.note?'<div class="note">'+esc(r.note)+'</div>':'');
+  };
+  const startEdit=()=>{
+    bc.innerHTML='';
+    const row=document.createElement('div');row.className='edit-row';
+    const ri=document.createElement('input');ri.value=r.rescuer||'';ri.placeholder='Rescuer (sent)';attachNameAC(ri);
+    const di=document.createElement('input');di.value=r.driver;di.placeholder='Driver (rescued)';attachNameAC(di);
+    const ni=document.createElement('input');ni.value=r.note||'';ni.placeholder='Route / reason';
+    const ok=document.createElement('button');ok.className='btn sm';ok.textContent='Save';
+    [ri,di,ni,ok].forEach(x=>row.appendChild(x));
+    bc.appendChild(row);
+    ri.focus();ri.select();
+    const commit=()=>{
+      const nd=di.value.trim();
+      if(!nd){toast('Driver name needed');di.focus();return;}
+      r.driver=nd;r.rescuer=ri.value.trim();r.note=ni.value.trim();
+      if(r.logId){
+        const le=db.rescueLog.find(x=>x.id===r.logId);
+        if(le){le.driver=normName(nd);le.note=r.note;}
+        renderRescueStats();
+      }
+      paintBody();save();toast('Updated');
+    };
+    ok.onclick=commit;
+    [di,ri,ni].forEach(inp=>inp.addEventListener('keydown',ev=>{
+      if(ev.key==='Enter'){ev.preventDefault();commit();}
+      if(ev.key==='Escape'){ev.preventDefault();paintBody();}
+    }));
+  };
+
+  paintBody();paintPill();
+  pill.onclick=()=>{
+    const idx=RSTATES.findIndex(x=>x[0]===r.st);
+    r.st=RSTATES[(idx+1)%3][0];
+    if(r.st==='disp'&&!r.logged){
+      r.logged=true;
+      const le={id:Date.now()+1,driver:normName(r.driver),ts:Date.now(),note:r.note||''};
+      r.logId=le.id;
+      db.rescueLog.push(le);
+      renderRescueStats();
+      toast('Rescue auto-logged for '+r.driver);
+    }
+    paintPill();badges();save();
+  };
+  editBtn.onclick=startEdit;
+  delBtn.onclick=()=>{
+    day.rescues=day.rescues.filter(x=>x.id!==r.id);
+    e.remove();if(!day.rescues.length)renderRescues();
+    badges();updateExtTotals();save();
+  };
+  e.appendChild(handle);e.appendChild(body);e.appendChild(pill);e.appendChild(editBtn);e.appendChild(delBtn);
+  return e;
+}
+function renderRescues(){
+  const w=el('r-list');w.textContent='';
+  if(!day.rescues.length){w.innerHTML='<div class="empty">Board is clear.</div>';return;}
+  const f=document.createDocumentFragment();
+  day.rescues.forEach(r=>f.appendChild(rescueEl(r)));
+  w.appendChild(f);
+}
+function addRescue(){
+  const d=v('r-driver'),n=v('r-note');
+  const rescuer=el('r-rescuer')?v('r-rescuer'):'';
+  if(!d){toast('Driver name needed');return;}
+  const le={id:Date.now()+1,driver:normName(d),ts:Date.now(),note:n};
+  const r={id:Date.now(),driver:d,note:n,rescuer:rescuer,ts:Date.now(),st:'disp',logged:true,logId:le.id};
+  day.rescues.unshift(r);
+  db.rescueLog.push(le);
+  renderRescueStats();
+  el('r-driver').value='';el('r-note').value='';
+  if(el('r-rescuer'))el('r-rescuer').value='';
+  el('r-driver').focus();
+  const w=el('r-list');
+  if(day.rescues.length===1)w.textContent='';
+  w.insertBefore(rescueEl(r),w.firstChild);
+  badges();save();toast('Dispatched + logged for '+d);
+}
+
+/* ---------- problem solve board ---------- */
+function psEl(r){
+  const e=document.createElement('div');e.className='item';e.dataset.id=r.id;
+  const pill=document.createElement('button');pill.className='stpill';
+  const editBtn=document.createElement('button');editBtn.className='del pencil';editBtn.textContent='✎';editBtn.title='Edit';
+  const delBtn=document.createElement('button');delBtn.className='del';delBtn.textContent='×';
+  const body=document.createElement('div');body.className='body';const bc=document.createElement('div');body.appendChild(bc);
+  const handle=mkHandle(e);
+  const paintPill=()=>{const idx=RSTATES.findIndex(x=>x[0]===r.st);pill.className='stpill st-'+r.st;pill.textContent=RSTATES[idx][1];};
+  const paintBody=()=>{bc.innerHTML='<div class="top"><span class="who">'+esc(r.driver)+'</span>'+
+    (r.rescuer?'<span class="rsc" title="Rescuer">⛑ '+esc(r.rescuer)+'</span>':'')+
+    '<span class="ts">'+fmtTime(r.ts)+'</span></div>'+
+    (r.note?'<div class="note">'+esc(r.note)+'</div>':'');};
+  const startEdit=()=>{
+    bc.innerHTML='';const row=document.createElement('div');row.className='edit-row';
+    const ri=document.createElement('input');ri.value=r.rescuer||'';ri.placeholder='Rescuer (sent)';attachNameAC(ri);
+    const di=document.createElement('input');di.value=r.driver;di.placeholder='Driver (rescued)';attachNameAC(di);
+    const ni=document.createElement('input');ni.value=r.note||'';ni.placeholder='Reason';
+    const ok=document.createElement('button');ok.className='btn sm';ok.textContent='Save';
+    [ri,di,ni,ok].forEach(x=>row.appendChild(x));bc.appendChild(row);ri.focus();
+    const commit=()=>{const nd=di.value.trim();if(!nd){toast('Driver name needed');return;}r.driver=nd;r.rescuer=ri.value.trim();r.note=ni.value.trim();paintBody();save();toast('Updated');};
+    ok.onclick=commit;[di,ri,ni].forEach(inp=>inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();commit();}if(ev.key==='Escape'){ev.preventDefault();paintBody();}}));
+  };
+  paintBody();paintPill();
+  pill.onclick=()=>{const idx=RSTATES.findIndex(x=>x[0]===r.st);r.st=RSTATES[(idx+1)%3][0];paintPill();badges();save();};
+  editBtn.onclick=startEdit;
+  delBtn.onclick=()=>{day.problemSolve=day.problemSolve.filter(x=>x.id!==r.id);e.remove();if(!day.problemSolve.length)renderProblemSolve();badges();save();};
+  e.appendChild(handle);e.appendChild(body);e.appendChild(pill);e.appendChild(editBtn);e.appendChild(delBtn);return e;
+}
+function renderProblemSolve(){const w=el('ps-list');if(!w)return;w.textContent='';if(!day.problemSolve.length){w.innerHTML='<div class="empty">No problems being tracked.</div>';return;}const fr=document.createDocumentFragment();day.problemSolve.forEach(r=>fr.appendChild(psEl(r)));w.appendChild(fr);}
+function addProblemSolve(){const d=v('ps-driver'),n=v('ps-note');const rescuer=el('ps-rescuer')?v('ps-rescuer'):'';if(!d){toast('Driver name needed');return;}const r={id:Date.now(),driver:d,note:n,rescuer:rescuer,ts:Date.now(),st:'disp'};day.problemSolve.unshift(r);el('ps-driver').value='';el('ps-note').value='';if(el('ps-rescuer'))el('ps-rescuer').value='';el('ps-driver').focus();const w=el('ps-list');if(day.problemSolve.length===1)w.textContent='';w.insertBefore(psEl(r),w.firstChild);badges();save();toast('Tracking problem for '+d);}
+
+/* ---------- extras carried (phones / chargers / fob batteries) ---------- */
+const EXT_DEFS=[['ph','📱','Phone'],['ch','🔌','Charger'],['fb','🔋','Fob Batt'],['pcb','📦','Port. Charger']];
+function mkExtRow(obj){
+  const row=document.createElement('div');row.className='extrow';
+  EXT_DEFS.forEach(([k,ic,lbl])=>{
+    const wrap=document.createElement('span');wrap.className='extc';
+    const chip=document.createElement('button');chip.className='extchip';
+    const minus=document.createElement('button');minus.className='extminus';minus.textContent='−';
+    minus.title='Remove one';
+    const paint=()=>{
+      const n=(obj.ext&&obj.ext[k])||0;
+      chip.innerHTML=ic+' '+lbl+(n?' <b>'+n+'</b>':'');
+      chip.classList.toggle('has',n>0);
+      minus.style.display=n>0?'':'none';
+    };
+    chip.title='Click: +1 '+lbl.toLowerCase();
+    chip.onclick=()=>{obj.ext=obj.ext||{};obj.ext[k]=(obj.ext[k]||0)+1;paint();updateExtTotals();save();};
+    minus.onclick=()=>{if(obj.ext&&obj.ext[k]>0){obj.ext[k]--;paint();updateExtTotals();save();}};
+    paint();
+    wrap.appendChild(chip);wrap.appendChild(minus);
+    row.appendChild(wrap);
+  });
+  return row;
+}
+function extTotals(){
+  const t={ph:0,ch:0,fb:0,pcb:0,carriers:0};
+  [...day.adhocs,...day.rescueRoutes].forEach(x=>{
+    if(!x.ext)return;
+    let any=false;
+    EXT_DEFS.forEach(([k])=>{const n=x.ext[k]||0;t[k]+=n;if(n>0)any=true;});
+    if(any)t.carriers++;
+  });
+  return t;
+}
+function updateExtTotals(){
+  const w=el('ext-totals');if(!w)return;
+  const t=extTotals();
+  w.innerHTML=EXT_DEFS.map(([k,ic,lbl])=>
+    '<span class="lpill'+(t[k]?' tp-acc':'')+'"><b>'+t[k]+'</b> '+ic+' '+lbl+'</span>').join('')+
+    '<span class="lpill'+(t.carriers?' tp-acc':'')+'"><b>'+t.carriers+'</b> carrying</span>';
+}
+
+/* ---------- sort + drag for adhoc / rescue boards ---------- */
+const SORT_LBL={time:'⇅ Newest',status:'⇅ Status',name:'⇅ A–Z'};
+const sortState={adhoc:'time',rescue:'time'};
+function applySort(kind){
+  const arr=kind==='adhoc'?day.adhocs:day.rescues;
+  const mode=sortState[kind];
+  if(mode==='time')arr.sort((a,b)=>b.ts-a.ts);
+  else if(mode==='name')arr.sort((a,b)=>String(a.driver||a.route||'').localeCompare(String(b.driver||b.route||'')));
+  else if(mode==='status'){
+    const ord=kind==='rescue'?{disp:0,rec:1,watch:2}:{out:0,pend:1,done:2};
+    arr.sort((a,b)=>(ord[a.st]-ord[b.st])||(b.ts-a.ts));
+  }
+  (kind==='adhoc'?renderAdhocs:renderRescues)();
+  save();
+}
+function wireSortBtn(btnId,kind){
+  const b=el(btnId);if(!b)return;
+  b.textContent=SORT_LBL[sortState[kind]];
+  b.onclick=()=>{
+    const modes=['time','status','name'];
+    sortState[kind]=modes[(modes.indexOf(sortState[kind])+1)%modes.length];
+    b.textContent=SORT_LBL[sortState[kind]];
+    applySort(kind);
+  };
+}
+function mkHandle(item){
+  const h=document.createElement('span');
+  h.className='drag';h.textContent='⠿';h.title='Drag to reorder';
+  h.draggable=true;
+  h.addEventListener('dragstart',e=>{
+    item.classList.add('dragging');
+    try{e.dataTransfer.setData('text/plain','');e.dataTransfer.setDragImage(item,16,16);}catch(_){}
+  });
+  h.addEventListener('dragend',()=>{
+    item.classList.remove('dragging');
+    commitOrder(item.parentElement);
+  });
+  return h;
+}
+function commitOrder(container){
+  if(!container)return;
+  const ids=[...container.querySelectorAll('.item')].map(x=>+x.dataset.id);
+  if(!ids.length)return;
+  const reorder=arr=>arr.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+  if(container.id==='a-list')reorder(day.adhocs);
+  if(container.id==='r-list')reorder(day.rescues);
+  save();
+}
+function dragAfter(container,y){
+  const els=[...container.querySelectorAll('.item:not(.dragging)')];
+  return els.reduce((closest,child)=>{
+    const box=child.getBoundingClientRect();
+    const off=y-box.top-box.height/2;
+    return (off<0&&off>closest.off)?{off,el:child}:closest;
+  },{off:-Infinity,el:null}).el;
+}
+function initDnD(){
+  ['a-list','r-list'].forEach(id=>{
+    const c=el(id);if(!c)return;
+    c.addEventListener('dragover',e=>{
+      e.preventDefault();
+      const drag=c.querySelector('.dragging');if(!drag)return;
+      const after=dragAfter(c,e.clientY);
+      if(after==null)c.appendChild(drag);else c.insertBefore(drag,after);
+    });
+    c.addEventListener('drop',e=>e.preventDefault());
+  });
+}
+
+/* ---------- rescue frequency (with per-entry delete) ---------- */
+function manualRescueLog(){
+  const d=v('rl-driver');if(!d){toast('Driver name needed');return;}
+  const note=el('rl-note')?v('rl-note'):'';
+  db.rescueLog.push({id:Date.now(),driver:normName(d),ts:Date.now(),note:note});
+  el('rl-driver').value='';
+  if(el('rl-note'))el('rl-note').value='';
+  el('rl-driver').focus();
+  renderRescueStats();save();toast('Logged rescue for '+normName(d));
+}
+function rescueCounts(daysBack){
+  const cut=Date.now()-daysBack*864e5,m={};
+  db.rescueLog.forEach(r=>{if(r.ts>=cut){const k=normName(r.driver);m[k]=(m[k]||0)+1;}});
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+}
+function removeRescueEntry(name){
+  const cut=Date.now()-db.rlRange*864e5;
+  let idx=-1,best=-1;
+  db.rescueLog.forEach((r,i)=>{
+    if(normName(r.driver)===name&&r.ts>=cut&&r.ts>best){best=r.ts;idx=i;}
+  });
+  if(idx>-1){
+    db.rescueLog.splice(idx,1);
+    renderRescueStats();save();
+    toast('Removed 1 rescue for '+name);
+  }
+}
+function renderRescueStats(){
+  const rw=el('rl-range');rw.textContent='';
+  [[7,'7 Days'],[30,'30 Days'],[92,'90 Days']].forEach(([dd,lbl])=>{
+    const b=document.createElement('button');
+    b.className='chip'+(db.rlRange===dd?' on':'');b.textContent=lbl;
+    b.onclick=()=>{db.rlRange=dd;renderRescueStats();save();};
+    rw.appendChild(b);
+  });
+  const w=el('rl-list');w.textContent='';
+  const rows=rescueCounts(db.rlRange);
+  if(!rows.length){w.innerHTML='<div class="empty">No rescues in this window.</div>';return;}
+  const cut=Date.now()-db.rlRange*864e5;
+  const f=document.createDocumentFragment();
+  rows.forEach(([name,n])=>{
+    const hot=(n>=3&&db.rlRange<=7)||(n>=6&&db.rlRange>7);
+    const reasons=db.rescueLog
+      .filter(r=>r.ts>=cut&&normName(r.driver)===name)
+      .sort((a,b)=>b.ts-a.ts)
+      .map(r=>new Date(r.ts).toLocaleDateString('en-US',{month:'numeric',day:'numeric'})+
+        (r.note?' — '+esc(r.note):''));
+    const e=document.createElement('div');e.className='item';
+    e.innerHTML='<div class="body"><div class="top"><span class="who">'+esc(name)+'</span></div>'+
+      (reasons.length?'<div class="note rl-reasons">'+reasons.join('<br>')+'</div>':'')+
+      '</div>'+
+      '<span class="stpill '+(hot?'st-disp':'st-watch')+'">'+n+' rescue'+(n>1?'s':'')+'</span>'+
+      '<button class="del minus" title="Remove most recent entry for '+esc(name)+'">−</button>';
+    e.querySelector('.minus').onclick=()=>removeRescueEntry(name);
+    f.appendChild(e);
+  });
+  w.appendChild(f);
+}
+function exportRescueLog(){
+  const rows=rescueCounts(db.rlRange);
+  const lines=['FR10 RESCUE FREQUENCY — last '+db.rlRange+' days',
+    'Generated '+new Date().toLocaleDateString('en-US')+' by Isaiha',''];
+  if(!rows.length)lines.push('No rescues in this window.');
+  else rows.forEach(([n,c])=>lines.push(n+'\t'+c+' rescue'+(c>1?'s':'')));
+  lines.push('','Detail:');
+  const cut=Date.now()-db.rlRange*864e5;
+  db.rescueLog.filter(r=>r.ts>=cut).sort((a,b)=>a.ts-b.ts)
+    .forEach(r=>lines.push(new Date(r.ts).toLocaleDateString('en-US',{month:'numeric',day:'numeric'})+' — '+normName(r.driver)+(r.note?' — '+r.note:'')));
+  copyText(lines.join('\n'),'Report copied — paste anywhere');
+}
+
+/* ---------- extras ---------- */
+function addExtra(){
+  const n=v('x-name');if(!n){toast('Name needed');return;}
+  day.extras.push(normName(n));
+  el('x-name').value='';el('x-name').focus();
+  renderExtras();save();toast(normName(n)+' added to extras');
+}
+function renderExtras(){
+  const w=el('x-list');w.textContent='';
+  if(!day.extras.length){
+    w.innerHTML='<span style="font-size:12px;color:var(--faint)">No extras yet — type a name, hit Enter, repeat.</span>';return;
+  }
+  day.extras.forEach((n,i)=>{
+    const b=document.createElement('button');b.className='chip on';b.textContent=n+'  ×';
+    b.onclick=()=>{day.extras.splice(i,1);renderExtras();save();};
+    w.appendChild(b);
+  });
+}
+
+/* ---------- lot: build once, paint in place ---------- */
+const BAYEL={};
+function paintBay(b){
+  const r=BAYEL[b.id];if(!r)return;
+  const rec=day.lot[b.id]||{};
+  const st=bayState(b);
+  r.van.textContent=rec.van||'+ van';
+  r.van.className='vanbtn'+(rec.van?' set':'')+(rec.van==='DSP'?' is-dsp':'');
+  r.st.textContent=b.down?'OOS':LLBL[st];
+  r.st.className='baystate'+(st?' bs-'+st:'');
+}
+function lotTally(){
+  const c={ok:0,nochg:0,unplg:0};
+  LOT.forEach(b=>{
+    if(b.type||b.down)return;
+    const st=bayState(b);if(st&&c[st]!==undefined)c[st]++;
+  });
+  el('l-ok').textContent=c.ok;el('l-nochg').textContent=c.nochg;
+  el('l-unplg').textContent=c.unplg;
+}
+function buildLot(){
+  const w=el('l-list');w.textContent='';
+  const f=document.createDocumentFragment();
+  LOT.forEach(b=>{
+    if(b.type==='sec'){
+      const s=document.createElement('div');s.className='lot-section';s.textContent=b.label;
+      f.appendChild(s);return;
+    }
+    const e=document.createElement('div');
+    e.className='bay'+(b.down?' is-dead':'')+(b.trainer?' is-trainer':'');
+    const flags=[];
+    if(b.trainer)flags.push('<span class="bfl bfl-t">Trainer</span>');
+    if(b.sc)flags.push('<span class="bfl bfl-s">Supercharger</span>');
+    if(b.half)flags.push('<span class="bfl bfl-h">½ hub</span>');
+    if(b.flaky)flags.push('<span class="bfl bfl-f">⚠ flaky</span>');
+    if(b.down)flags.push('<span class="bfl bfl-o">Out of service</span>');
+    e.innerHTML='<div class="bay-top"><span class="bayid">'+b.id+'</span>'+
+      '<div class="bay-flags">'+flags.join('')+'</div></div>'+
+      '<div class="bay-ctl"><button class="vanbtn"></button><button class="baystate"></button></div>';
+    const vanBtn=e.querySelector('.vanbtn'),stBtn=e.querySelector('.baystate');
+    BAYEL[b.id]={van:vanBtn,st:stBtn};
+    if(b.down){vanBtn.disabled=true;stBtn.disabled=true;}
+    else{
+      vanBtn.onclick=()=>openPicker(b.id);
+      stBtn.onclick=()=>{
+        const cycle=b.std?CYCLE_STD:CYCLE_OTHER;
+        const cur=bayState(b);
+        const nxt=cycle[(cycle.indexOf(cur)+1)%cycle.length];
+        day.lot[b.id]={van:(day.lot[b.id]||{}).van||'',st:nxt,touched:true};
+        paintBay(b);lotTally();save();
+      };
+    }
+    f.appendChild(e);
+  });
+  w.appendChild(f);
+  LOT.forEach(b=>{if(!b.type)paintBay(b);});
+  lotTally();
+}
+function resetLot(){
+  day.lot={};
+  LOT.forEach(b=>{if(!b.type)paintBay(b);});
+  lotTally();save();toast('Walkthrough reset');
+}
+
+/* ---------- van picker ---------- */
+let pickBay=null;
+function usedVans(){const m={};Object.entries(day.lot).forEach(([id,x])=>{if(x.van)m[x.van]=id;});return m;}
+function openPicker(bayId){
+  pickBay=bayId;el('sh-bay').textContent=bayId;el('sh-custom').value='';
+  const used=usedVans(),cur=(day.lot[bayId]||{}).van||'',body=el('sh-body');
+  body.textContent='';
+  [['Rivian EDV',FLEET_E,''],['FREDV — eSprinter / ePromaster',FLEET_FREDV,'wide'],['Other DSP',['DSP'],'wide']]
+    .forEach(([title,list,wide])=>{
+      const h=document.createElement('div');h.className='vgroup';h.textContent=title;body.appendChild(h);
+      const g=document.createElement('div');g.className='vgrid'+(wide?' wide':'');
+      list.forEach(vn=>{
+        const c=document.createElement('button');
+        c.className='vanchip'+(vn===cur?' cur':used[vn]&&vn!=='DSP'?' used':'')+(vn==='DSP'?' xdsp':'');
+        c.textContent=vn;c.onclick=()=>assignVan(vn);
+        g.appendChild(c);
+      });
+      body.appendChild(g);
+    });
+  el('ovl').classList.add('open');
+}
+function closePicker(){el('ovl').classList.remove('open');pickBay=null;}
+function assignVan(vn){
+  if(!pickBay)return;
+  vn=String(vn).toUpperCase().trim();let moved='';
+  if(vn&&vn!=='DSP'){
+    const used=usedVans();
+    if(used[vn]&&used[vn]!==pickBay){
+      const old=used[vn];
+      day.lot[old]={...(day.lot[old]||{}),van:''};
+      const ob=LOT.find(x=>x.id===old);if(ob)paintBay(ob);
+      moved=' (moved from '+old+')';
+    }
+  }
+  const prev=day.lot[pickBay]||{};
+  day.lot[pickBay]={van:vn,st:prev.st,touched:prev.touched};
+  const b=LOT.find(x=>x.id===pickBay);
+  closePicker();
+  if(b)paintBay(b);
+  save();
+  toast(vn?vn+' → '+(b?b.id:''):''+(b?b.id+' cleared':''));
+}
+
+/* ---------- track log (digital Driver Issue Tracking sheet) ---------- */
+const TGROUPS=[
+  ['chg','EDV',[['lowbatt','Low Battery']]],
+  ['rt','Route Flags',[['large','Large Route'],['apt','APT Heavy'],['biz','Business Heavy'],['spread','Spread Out'],['d2d','D2D'],['delay','Unexpected Delay'],['rescue','Rescue Needed']]],
+  ['dev','Device',[['appcrash','App Crash'],['nosignal','No Signal'],['network','Network Issues'],['screen','Damaged Screen'],['charger','Needs Charger'],['needsphone','Needs Phone']]],
+  ['key','Key',[['keyfob','Needs Key Fob Battery']]],
+  ['van','Van',[['vanissue','Van Issue'],['dash','Dash Light'],['damage','Damage Report'],['tire','Tire Problem'],['ac','A/C Issue']]]
+];
+const TFLAG_LBL={};const TFLAG_GRP={};
+TGROUPS.forEach(([g,_,fl])=>fl.forEach(([k,lbl])=>{TFLAG_LBL[k]=lbl;TFLAG_GRP[k]=g;}));
+let tSel=new Set();
+let tEditId=null;
+
+function renderTrackForm(){
+  const w=el('t-flags');if(!w)return;
+  w.textContent='';
+  TGROUPS.forEach(([g,label,flags])=>{
+    const grp=document.createElement('div');grp.className='tgroup';
+    const h=document.createElement('div');h.className='tgroup-lbl tg-'+g;h.textContent=label;
+    grp.appendChild(h);
+    const row=document.createElement('div');row.className='tgroup-row';
+    flags.forEach(([k,lbl])=>{
+      const b=document.createElement('button');
+      b.className='tflag tg-'+g+(tSel.has(k)?' on':'');
+      b.textContent=lbl;
+      b.onclick=()=>{
+        tSel.has(k)?tSel.delete(k):tSel.add(k);
+        b.classList.toggle('on',tSel.has(k));
+      };
+      row.appendChild(b);
+    });
+    grp.appendChild(row);w.appendChild(grp);
+  });
+  const btn=el('t-add');
+  if(btn)btn.textContent=tEditId?'Update entry':'Add to log';
+}
+function addTrack(){
+  if(!el('t-name'))return;
+  const n=v('t-name');
+  if(!n){toast('Driver name needed');return;}
+  if(!tSel.size&&!v('t-note')){toast('Tap at least one issue, or add a note');return;}
+  const flags=[...tSel];
+  const van=el('t-van')?v('t-van').toUpperCase():'';
+  if(tEditId){
+    const t=day.track.find(x=>x.id===tEditId);
+    if(t){t.name=normName(n);t.van=van;t.flags=flags;t.note=v('t-note');}
+    tEditId=null;
+    toast('Updated '+normName(n));
+  }else{
+    day.track.unshift({id:Date.now(),name:normName(n),van:van,flags,note:v('t-note'),ts:Date.now()});
+    toast('Logged '+normName(n));
+  }
+  el('t-name').value='';el('t-note').value='';
+  if(el('t-van'))el('t-van').value='';
+  tSel=new Set();
+  renderTrackForm();renderTrack();save();
+  el('t-name').focus();
+}
+function editTrack(id){
+  const t=day.track.find(x=>x.id===id);if(!t)return;
+  tEditId=id;
+  el('t-name').value=t.name;
+  if(el('t-van'))el('t-van').value=t.van||'';
+  el('t-note').value=t.note||'';
+  tSel=new Set(t.flags);
+  renderTrackForm();
+  el('t-name').focus();
+}
+const RES_ACTIONS=['Swapped Van','Sent Rescue','Delivered Charger','Delivered Key Fob','Swapped Device','Called Driver','Fixed On Site','Resolved'];
+function trackEl(t){
+  const e=document.createElement('div');
+  e.className='item'+(t.res?' done-ok':'');
+  const tags=t.flags.map(k=>'<span class="ttag tg-'+TFLAG_GRP[k]+'">'+TFLAG_LBL[k]+'</span>').join('');
+  e.innerHTML='<div class="body"><div class="top"><span class="who">'+esc(t.name)+'</span>'+
+    (t.van?'<span class="van">'+esc(t.van)+'</span>':'')+
+    '<span class="ts">'+fmtTime(t.ts)+'</span></div>'+
+    (tags?'<div class="ttags">'+tags+'</div>':'')+
+    (t.note?'<div class="note">'+esc(t.note)+'</div>':'')+
+    '<div class="resrow"></div>'+
+    '</div><button class="del pencil" title="Edit">✎</button><button class="del">×</button>';
+  const resrow=e.querySelector('.resrow');
+  const repaint=()=>{e.replaceWith(trackEl(t));renderTrackSummary();save();};
+  if(t.res){
+    const flair=document.createElement('button');
+    flair.className='resflair';
+    flair.innerHTML='✓ '+esc(t.res.a)+' <span>· '+fmtTime(t.res.ts)+'</span>';
+    flair.title='Click to reopen';
+    flair.onclick=()=>{t.res=null;repaint();toast('Reopened '+t.name);};
+    resrow.appendChild(flair);
+  }else{
+    const open=document.createElement('button');
+    open.className='resolve-btn';open.textContent='✓ Resolve';
+    open.onclick=()=>{
+      open.remove();
+      const chips=document.createElement('div');chips.className='reschips';
+      RES_ACTIONS.forEach(a=>{
+        const c=document.createElement('button');
+        c.className='reschip';c.textContent=a;
+        c.onclick=()=>{t.res={a:a,ts:Date.now()};repaint();toast(t.name+' — '+a);};
+        chips.appendChild(c);
+      });
+      resrow.appendChild(chips);
+    };
+    resrow.appendChild(open);
+  }
+  const btns=e.querySelectorAll('.del');
+  btns[0].onclick=()=>editTrack(t.id);
+  btns[1].onclick=()=>{
+    day.track=day.track.filter(x=>x.id!==t.id);
+    if(tEditId===t.id){tEditId=null;tSel=new Set();el('t-name').value='';el('t-note').value='';renderTrackForm();}
+    renderTrack();save();
+  };
+  return e;
+}
+function trackCounts(){
+  const c={drivers:day.track.length};
+  Object.keys(TFLAG_LBL).forEach(k=>c[k]=0);
+  day.track.forEach(t=>t.flags.forEach(k=>{if(c[k]!==undefined)c[k]++;}));
+  c.device=c.appcrash+c.nosignal+c.network+c.screen+c.charger+c.needsphone;
+  c.van3=c.vanissue+c.dash+c.damage+c.tire+c.ac;
+  return c;
+}
+function renderTrackSummary(){
+  const s=el('t-summary');if(!s)return;
+  const c=trackCounts();
+  const resolved=day.track.filter(t=>t.res).length;
+  s.innerHTML=[
+    ['Drivers',c.drivers,''],['Low Batt',c.lowbatt,'chg'],
+    ['Large',c.large,'rt'],['APT',c.apt,'rt'],['Biz',c.biz,'rt'],['Spread',c.spread,'rt'],['D2D',c.d2d,'rt'],['Delay',c.delay,'rt'],['Rescue',c.rescue,'rt'],
+    ['Device',c.device,'dev'],['Key Fob',c.keyfob,'key'],['Van',c.van3,'van'],
+    ['Resolved',resolved+'/'+c.drivers,resolved?'ok':'']
+  ].map(([lbl,n,g])=>'<span class="lpill'+(g?' tp-'+g:'')+'"><b>'+n+'</b> '+lbl+'</span>').join('');
+}
+function renderTrack(){
+  const w=el('t-list');if(!w)return;
+  w.textContent='';
+  if(!day.track.length){w.innerHTML='<div class="empty">No drivers logged — type a name, tap the issues, add.</div>';}
+  else{
+    const f=document.createDocumentFragment();
+    day.track.forEach(t=>f.appendChild(trackEl(t)));
+    w.appendChild(f);
+  }
+  renderTrackSummary();
+}
+function copyTrackSummary(){
+  const c=trackCounts();
+  const lines=['DRIVER ISSUE TRACKING — '+new Date().toLocaleDateString('en-US')+' (Isaiha, closing)',''];
+  const resolved=day.track.filter(t=>t.res).length;
+  lines.push('Totals: '+c.drivers+' drivers logged · '+resolved+' resolved · low battery '+c.lowbatt+' · large route '+c.large+
+    ' · APT heavy '+c.apt+' · business heavy '+c.biz+' · spread out '+c.spread+' · D2D '+c.d2d+' · unexpected delay '+c.delay+' · rescue needed '+c.rescue+' · device '+c.device+
+    ' · key fob '+c.keyfob+' · van '+c.van3);
+  lines.push('');
+  day.track.slice().reverse().forEach(t=>{
+    lines.push('• '+fmtTime(t.ts)+' — '+t.name+(t.van?' / '+t.van:'')+(t.flags.length?' ['+t.flags.map(k=>TFLAG_LBL[k]).join(', ')+']':'')+(t.note?': '+t.note:'')+(t.res?' — RESOLVED: '+t.res.a+' ('+fmtTime(t.res.ts)+')':' — open'));
+  });
+  copyText(lines.join('\n'),'Track log copied');
+}
+/* ---------- reminders ---------- */
+function renderQuick(){
+  const w=el('m-quick');w.textContent='';
+  [['+30 min',30],['+1 hr',60],['+2 hr',120],['8:30 tonight','830pm'],['Tmrw 11am','tmrw']].forEach(([lbl,val])=>{
+    const b=document.createElement('button');b.className='chip';b.textContent=lbl;
+    b.onclick=()=>{
+      let d=new Date();
+      if(val==='830pm'){d.setHours(20,30,0,0);if(d<new Date())d.setDate(d.getDate()+1);}
+      else if(val==='tmrw'){d.setDate(d.getDate()+1);d.setHours(11,0,0,0);}
+      else d=new Date(Date.now()+val*60000);
+      const off=d.getTimezoneOffset()*60000;
+      el('m-date').value=new Date(d-off).toISOString().slice(0,10);
+      el('m-time').value=pad(d.getHours())+':'+pad(d.getMinutes());
+    };
+    w.appendChild(b);
+  });
+}
+function addReminder(){
+  const t=v('m-title');if(!t){toast('What should I remind you about?');return;}
+  const ds=v('m-date'),ts=v('m-time');if(!ds||!ts){toast('Pick a date and time');return;}
+  db.reminders.push({id:Date.now(),title:t,due:new Date(ds+'T'+ts).getTime(),done:false,fired:false});
+  db.reminders.sort((a,b)=>a.due-b.due);
+  el('m-title').value='';el('m-title').focus();
+  renderReminders();badges();save();toast('Reminder set');
+}
+function fmtDue(ts){
+  const d=new Date(ts),n=new Date();
+  const tm=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if(d.toDateString()===n.toDateString())return tm+' today';
+  const tom=new Date(n);tom.setDate(tom.getDate()+1);
+  if(d.toDateString()===tom.toDateString())return tm+' tomorrow';
+  return d.toLocaleDateString('en-US',{weekday:'short',month:'numeric',day:'numeric'})+' '+tm;
+}
+function renderReminders(){
+  const w=el('m-list');w.textContent='';
+  if(!db.reminders.length){w.innerHTML='<div class="empty">No reminders.</div>';return;}
+  const live=db.reminders.filter(r=>!r.done),done=db.reminders.filter(r=>r.done);
+  const f=document.createDocumentFragment();
+  [...live,...done].forEach(r=>{
+    const ov=!r.done&&r.due<=Date.now();
+    const e=document.createElement('div');e.className='item'+(r.done?' resolved':'')+(ov?' due':'');
+    e.innerHTML='<button class="tick'+(r.done?' on':'')+'">✓</button>'+
+      '<div class="body"><div class="top"><span class="who">'+esc(r.title)+'</span></div>'+
+      '<div class="note" style="'+(ov?'color:var(--bad);font-weight:600':'')+'">'+
+      (ov?'⏰ DUE — ':'')+fmtDue(r.due)+'</div></div>'+
+      '<button class="del" style="font-size:15px" title="Send to Calendar">📅</button><button class="del">×</button>';
+    e.querySelector('.tick').onclick=()=>{r.done=!r.done;renderReminders();badges();save();};
+    const btns=e.querySelectorAll('.del');
+    btns[0].onclick=()=>icsExport(r);
+    btns[1].onclick=()=>{db.reminders=db.reminders.filter(x=>x.id!==r.id);renderReminders();badges();save();};
+    f.appendChild(e);
+  });
+  w.appendChild(f);
+}
+function checkReminders(){
+  let fired=false;
+  db.reminders.forEach(r=>{
+    if(!r.done&&!r.fired&&r.due<=Date.now()){
+      r.fired=true;fired=true;
+      toast('⏰ '+r.title,true);
+      if(typeof notifyOS==='function')notifyOS(r.title);
+    }
+  });
+  if(fired){renderReminders();badges();save();}
+}
+function icsDt(ts){const d=new Date(ts);
+  return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z';}
+function icsExport(r){
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FR10 Dispatch Hub//EN',
+    'BEGIN:VEVENT','UID:'+r.id+'@fr10hub','DTSTAMP:'+icsDt(Date.now()),
+    'DTSTART:'+icsDt(r.due),'DTEND:'+icsDt(r.due+15*60000),
+    'SUMMARY:'+r.title.replace(/[,;]/g,' '),
+    'BEGIN:VALARM','TRIGGER:-PT0M','ACTION:DISPLAY','DESCRIPTION:'+r.title.replace(/[,;]/g,' '),'END:VALARM',
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a=document.createElement('a');
+  a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
+  a.download=r.title.replace(/\W+/g,'_').slice(0,30)+'.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('Calendar file ready — open to add');
+}
+
+/* ---------- EOD ---------- */
+function refreshEOD(){
+  const n=new Date(),lines=[];
+  lines.push('NIGHTLY NOTES — '+n.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'2-digit'})+' (Isaiha, closing)');
+  lines.push('');
+  lines.push('EXTRAS FOR TOMORROW (AM):');
+  lines.push(day.extras.length?'• '+day.extras.join(', '):'• None confirmed.');
+  lines.push('');
+  lines.push('RESCUES / ROUTE WATCH:');
+  if(!day.rescues.length)lines.push('• None — all routes ran clean.');
+  else day.rescues.slice().reverse().forEach(x=>{
+    const st=x.st==='rec'?'picked up':x.st==='disp'?'rescue dispatched':'complete';
+    const by=x.rescuer?' — rescuer: '+x.rescuer:'';
+    lines.push('• '+x.driver+(x.note?' ('+x.note+')':'')+' — '+st+by);
+  });
+  lines.push('');
+  lines.push('DRIVER ISSUES:');
+  if(!day.issues.length)lines.push('• None logged.');
+  else day.issues.slice().reverse().forEach(i=>{
+    lines.push('• '+fmtTime(i.ts)+' — '+i.driver+(i.van?' / '+i.van:'')+' ['+i.cat+']'+(i.note?': '+i.note:'')+(i.resolved?' — resolved':' — OPEN'));
+  });
+  lines.push('');
+  const c={ok:0,nochg:0,unplg:0},probs=[],trainers=[];
+  LOT.forEach(b=>{
+    if(b.type||b.down)return;
+    const st=bayState(b),van=(day.lot[b.id]||{}).van||'';
+    if(st&&c[st]!==undefined)c[st]++;
+    if(st==='nochg')probs.push(b.id+(van?' ('+van+')':'')+' plugged but not charging');
+    if(st==='unplg')probs.push(b.id+(van?' ('+van+')':'')+' found unplugged');
+    if(b.trainer&&van&&van!=='DSP')trainers.push(van+' on '+b.id);
+  });
+  lines.push('CHARGING LOT:');
+  lines.push('• '+c.ok+' OK, '+c.nochg+' no charge, '+c.unplg+' unplugged.');
+  probs.forEach(p=>lines.push('• '+p));
+  if(trainers.length)lines.push('• HEADS UP — our van(s) in trainer spaces: '+trainers.join(', '));
+  lines.push('• A119–A120 superchargers out of service. A118 intermittent.');
+  const open=day.issues.filter(i=>!i.resolved);
+  if(open.length){lines.push('');lines.push('CARRYOVER FOR OPENERS: '+open.map(i=>i.driver+' ('+i.cat+')').join(', '));}
+  el('eod-text').textContent=lines.join('\n');
+}
+function copyText(t,okMsg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast(okMsg)).catch(()=>fallbackCopy(t,okMsg));
+  }else fallbackCopy(t,okMsg);
+}
+function fallbackCopy(t,okMsg){
+  const ta=document.createElement('textarea');ta.value=t;
+  ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast(okMsg);}catch(e){toast('Select the text and copy manually');}
+  document.body.removeChild(ta);
+}
+function copyEOD(){refreshEOD();copyText(el('eod-text').textContent,'Copied — paste into Hera');}
+
+/* ---------- backup ---------- */
+async function exportData(){
+  const t=JSON.stringify(db);
+  el('io-wrap').style.display='block';el('io-box').value=t;
+  if(window.showSaveFilePicker){const fn=await saveBackupFile();if(fn)toast('Saved '+fn);return;}
+  copyText(t,'Backup copied — save it somewhere safe');
+}
+function importData(){
+  try{
+    const obj=JSON.parse(v('io-box'));if(!obj.days)throw 0;
+    db=Object.assign({days:{},reminders:[],rescueLog:[],issueLog:[],selCat:'Vehicle',rlRange:7},obj);
+    if(!db.rescueLog)db.rescueLog=[];
+    if(!db.issueLog)db.issueLog=[];
+    if(!db.days[todayKey()])db.days[todayKey()]=blankDay();
+    day=db.days[todayKey()];
+    if(!day.adhocs)day.adhocs=[];if(!day.extras)day.extras=[];if(!day.track)day.track=[];
+    if(!day.rescueRoutes)day.rescueRoutes=[];if(!day.problemSolve)day.problemSolve=[];
+    save();renderAll();toast('Restored');
+  }catch(e){toast('That does not look like a valid backup');}
+}
+
+/* ---------- weather (DLV2) ---------- */
+const WX_LAT=36.10,WX_LON=-115.24;
+const WX_CODES={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',
+  51:'Drizzle',53:'Drizzle',55:'Drizzle',61:'Rain',63:'Rain',65:'Heavy rain',
+  80:'Showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
+let wxTimer=null;
+async function fetchWeather(manual){
+  if(manual)el('wx-cond').textContent='Refreshing…';
+  try{
+    const url='https://api.open-meteo.com/v1/forecast?latitude='+WX_LAT+'&longitude='+WX_LON+
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code'+
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FLos_Angeles';
+    const j=await(await fetch(url)).json(),c=j.current;
+    const temp=Math.round(c.temperature_2m),feels=Math.round(c.apparent_temperature);
+    const wind=Math.round(c.wind_speed_10m),hum=Math.round(c.relative_humidity_2m);
+    const cond=WX_CODES[c.weather_code]||'—';
+    let cls='',flag='';
+    if(feels>=105){cls='hot';flag='Extreme Heat';}
+    else if(feels>=95){cls='warm';flag='Hot out there';}
+    else if(c.weather_code>=95){cls='storm';flag='Storms';}
+    el('wx-bar').className='wx-bar'+(cls?' '+cls:'');
+    el('wx-temp').textContent=temp+'°';
+    el('wx-cond').textContent=cond+' · Feels '+feels+'°';
+    el('wx-meta').textContent='Wind '+wind+' mph · '+hum+'% RH · Spring Valley / DLV2';
+    el('wx-flag').textContent=flag;
+  }catch(e){
+    el('wx-bar').className='wx-bar';
+    el('wx-temp').textContent='--°';
+    el('wx-cond').textContent='Weather unavailable';
+    el('wx-meta').textContent='Offline — tap to retry';
+    el('wx-flag').textContent='';
+  }
+  clearTimeout(wxTimer);wxTimer=setTimeout(fetchWeather,15*60*1000);
+}
+
+/* ---------- clear day (fresh start) ---------- */
+let clearArm=null;
+function clearDay(){
+  const b=el('clear-day');
+  if(!clearArm){
+    clearArm=setTimeout(()=>{clearArm=null;if(b){b.textContent='⟳ Clear Day';b.classList.remove('armed');}},3500);
+    if(b){b.textContent='Confirm clear?';b.classList.add('armed');}
+    toast('Click again to wipe today — rescue history & reminders are kept');
+    return;
+  }
+  clearTimeout(clearArm);clearArm=null;
+  db.days[todayKey()]=blankDay();
+  day=db.days[todayKey()];
+  tEditId=null;tSel=new Set();
+  if(el('t-name')){el('t-name').value='';el('t-note').value='';}
+  if(b){b.textContent='⟳ Clear Day';b.classList.remove('armed');}
+  renderAll();updateExtTotals();save();
+  toast('Fresh day — board is clean');
+}
+
+/* ---------- save day to file, then clear ---------- */
+function stampName(){
+  const n=new Date(),off=n.getTimezoneOffset()*60000;
+  return 'FR10_DispatchHub_'+new Date(n-off).toISOString().slice(0,10);
+}
+/* Native "Save As" dialog where supported (Chrome/Edge on Mac), with auto-renaming
+   fallback that never overwrites a prior file. Returns a Promise<string fname>. */
+async function saveBackupFile(){
+  flushSave();
+  const json=JSON.stringify(db,null,2);
+  const base=stampName();
+  // Preferred path: real OS Save dialog, user picks folder + name, no overwrite risk.
+  if(window.showSaveFilePicker){
+    try{
+      const handle=await window.showSaveFilePicker({
+        suggestedName:base+'.json',
+        types:[{description:'Dispatch Hub backup',accept:{'application/json':['.json']}}]
+      });
+      const w=await handle.createWritable();
+      await w.write(json);await w.close();
+      return handle.name;
+    }catch(e){
+      if(e&&e.name==='AbortError')return null; // user cancelled — caller aborts the wipe
+      // otherwise fall through to download
+    }
+  }
+  // Fallback: anchor download with a unique, non-overwriting name (_2, _3, … if needed)
+  let fname=base+'.json';
+  try{
+    const key='fr10.savedfiles';
+    let seen=[];try{seen=JSON.parse(localStorage.getItem(key)||'[]');}catch(_){}
+    if(seen.includes(fname)){
+      let i=2;while(seen.includes(base+'_'+i+'.json'))i++;
+      fname=base+'_'+i+'.json';
+    }
+    seen.push(fname);localStorage.setItem(key,JSON.stringify(seen.slice(-200)));
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=fname;a.rel='noopener';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }catch(e){
+    copyText(json,'Backup copied to clipboard — save it as '+fname);
+  }
+  return fname;
+}
+let sdcArm=null;
+async function saveDayAndClear(){
+  const b=el('save-clear');
+  if(!sdcArm){
+    sdcArm=setTimeout(()=>{sdcArm=null;if(b){b.textContent='⤓ Save Day & Clear';b.classList.remove('armed');}},4000);
+    if(b){b.textContent='Save backup + wipe?';b.classList.add('armed');}
+    toast('Click again — opens Save dialog, then clears today');
+    return;
+  }
+  clearTimeout(sdcArm);sdcArm=null;
+  if(b){b.textContent='⤓ Save Day & Clear';b.classList.remove('armed');}
+  const fname=await saveBackupFile();
+  if(fname===null){toast('Save cancelled — nothing cleared');return;} // dialog dismissed → keep the day
+  // wipe today only; history, rescue log, reminders kept (same as clearDay)
+  db.days[todayKey()]=blankDay();
+  day=db.days[todayKey()];
+  if(typeof tEditId!=='undefined'){tEditId=null;tSel=new Set();}
+  if(el('t-name')){el('t-name').value='';el('t-note').value='';}
+  renderAll();if(typeof updateExtTotals==='function')updateExtTotals();
+  save();flushSave();
+  toast('Saved '+fname+' — board cleared for tomorrow');
+}
+
+/* ---------- boot ---------- */
+function renderMisc(){
+  const t=el('misc-notes');if(!t)return;
+  if(document.activeElement!==t)t.value=day.misc||'';
+}
+function copyMisc(){
+  const t=el('misc-notes');
+  copyText((t?t.value:day.misc)||'','Notes copied');
+}
+function renderAll(){
+  renderCats();renderIssues();renderAdhocs();renderRescueRoutes();renderRescues();renderProblemSolve();renderRescueStats();
+  renderExtras();buildLot();renderQuick();renderReminders();renderTrackForm();renderTrack();renderIssueArchive();renderMisc();refreshEOD();badges();
+}
+function boot(){
+  renderAll();tickClock();fetchWeather();
+  if(el('m-date')&&!el('m-date').value){
+    const n=new Date(),off=n.getTimezoneOffset()*60000;
+    el('m-date').value=new Date(n-off).toISOString().slice(0,10);
+  }
+  wireSortBtn('s-adhoc','adhoc');wireSortBtn('s-rescue','rescue');initDnD();updateExtTotals();
+  ['i-driver','a-driver','rr-driver','r-driver','r-rescuer','ps-driver','ps-rescuer','rl-driver','x-name']
+    .forEach(id=>attachNameAC(el(id)));
+  const mn=el('misc-notes');if(mn){mn.value=day.misc||'';mn.addEventListener('input',()=>{day.misc=mn.value;save();});}
+  setInterval(tickClock,30000);
+  const bc0=el('big-clock');
+  if(bc0){setInterval(()=>{
+    bc0.textContent=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+  },1000);}
+  setInterval(checkReminders,15000);
+  checkReminders();
+}
+
+
+/* mobile wiring */
+function notifyOS(title){if(navigator.vibrate)navigator.vibrate([200,100,200]);}
+document.querySelectorAll('nav [data-tab]').forEach(b=>{
+  b.onclick=()=>{switchTab(b.dataset.tab);el('main').scrollTop=0;};
+});
+el('ovl').addEventListener('click',closePicker);
+const _open=openPicker,_close=closePicker;
+openPicker=function(id){_open(id);el('modal').style.display='flex';};
+closePicker=function(){_close();el('modal').style.display='none';};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closePicker();return;}
+  if(e.key==='Enter'&&e.target.tagName==='INPUT'){
+    const map={'i-driver':addIssue,'i-van':addIssue,'i-note':addIssue,
+      'a-route':addAdhoc,'a-driver':addAdhoc,'r-driver':addRescue,'r-note':addRescue,
+      'rl-driver':manualRescueLog,'x-name':addExtra,'m-time':addReminder,
+      'sh-custom':()=>assignVan(el('sh-custom').value)};
+    const fn=map[e.target.id];if(fn){e.preventDefault();fn();}
+  }
+});
+boot();
+</script>
+</body>
+</html>
