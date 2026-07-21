@@ -64,6 +64,7 @@ header{padding:14px 16px 12px;border-bottom:1px solid var(--line);flex-shrink:0;
 .kr-preview{margin-top:8px;font-size:12px;font-family:var(--mono);min-height:15px;color:var(--faint)}
 .kr-preview.ok{color:var(--ok)} .kr-preview.ok b{color:#7fe6b4}
 .kr-preview.warn{color:#e9c27a} .kr-preview.bad{color:#ff9a9e}
+#kr-list .van{font-size:15px;font-weight:700;color:var(--blue);letter-spacing:.03em}
 .kr-flag{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:6px}
 .kr-flag.warn{color:#e9c27a;background:rgba(217,162,60,.12);border:1px solid rgba(217,162,60,.4)}
 .kr-flag.bad{color:#ff9a9e;background:rgba(229,72,77,.12);border:1px solid rgba(229,72,77,.4)}
@@ -154,6 +155,20 @@ h2.sec:first-child{margin-top:4px}
 .st-disp{color:#ff9a9e;background:rgba(229,72,77,.12);border:1px solid rgba(229,72,77,.4)}
 .st-rec,.st-done{color:#7fdcae;background:rgba(76,195,138,.10);border:1px solid rgba(76,195,138,.35)}
 .st-out{color:#9cc5ec;background:rgba(108,166,224,.10);border:1px solid rgba(108,166,224,.35)}
+
+/* ---- conex ---- */
+.conex-head{font-size:20px;margin-top:22px}
+.cx-row{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;
+  background:var(--card);border:1px solid var(--line);border-radius:10px}
+.cx-row .cx-v{font-size:17px;font-weight:700;color:var(--blue);letter-spacing:.02em;font-family:'Helvetica Neue',Arial,var(--sans)}
+.cx-row .cx-s{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.cx-row .cx-s.empty{color:var(--faint)}
+.cx-ground{margin-left:auto;font-size:11px;font-weight:700;font-family:var(--mono);letter-spacing:.05em;
+  padding:5px 11px;border-radius:999px;color:var(--muted);background:var(--surface);border:1px solid var(--line)}
+.cx-ground.on{color:#ff9a9e;background:rgba(229,72,77,.14);border-color:rgba(229,72,77,.5)}
+.cx-row.grounded{border-color:rgba(229,72,77,.5);background:rgba(229,72,77,.07)}
+.cx-row.grounded .cx-v{color:#ff9a9e}
+.cx-row .del{flex-shrink:0}
 
 /* ---- track log (mobile) ---- */
 .tgroup{margin-bottom:10px}
@@ -476,6 +491,17 @@ nav button .bdg{position:absolute;top:2px;right:16%;background:var(--bad);color:
   </div>
   <div class="fhint" style="margin-bottom:10px">Speak or type each van · press return to jump to the next bay</div>
   <div class="lot-list" id="l-list"></div>
+
+  <h2 class="sec conex-head">Conex</h2>
+  <div class="fhint" style="margin-bottom:10px">Vans parked by the Conex — unused (check SOC), no charger space, or grounded.</div>
+  <div class="card">
+    <div class="row2">
+      <input id="cx-van" placeholder="Van #" autocapitalize="characters">
+      <input id="cx-soc" placeholder="Charge % (optional)" autocapitalize="characters">
+    </div>
+    <button class="btn" style="margin-top:9px" onclick="addConex()">+ Add van</button>
+  </div>
+  <div id="cx-list"></div>
 </section>
 
 <section class="tabpane" id="pane-remind">
@@ -519,7 +545,7 @@ nav button .bdg{position:absolute;top:2px;right:16%;background:var(--bad);color:
   <h2 class="sec">Check Rivian Key Requests</h2>
   <div class="fhint" style="margin-bottom:8px">Paste the VIN digits Rivian sends (last 4–5). Matches E01–E26 only.</div>
   <div class="card">
-    <input id="kr-vin" placeholder="VIN digits — e.g. 2303" autocapitalize="characters" autocorrect="off" spellcheck="false" style="font-family:var(--mono)">
+    <input id="kr-vin" placeholder="VIN digits — e.g. 2303 · or: 2208, 1048" autocapitalize="characters" autocorrect="off" spellcheck="false" style="font-family:var(--mono)">
     <div id="kr-preview" class="kr-preview"></div>
     <button class="btn" style="margin-top:9px" onclick="addKeyReq()">+ Add key request</button>
   </div>
@@ -650,7 +676,7 @@ function todayKey(){
   // 4-5pm Pacific, which previously caused evening/after-sleep "resets".
   return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
 }
-function blankDay(){return {issues:[],rescues:[],adhocs:[],lot:{},extras:[],track:[],rescueRoutes:[],problemSolve:[],misc:'',eodCustom:'',vanIssues:[],keyReqs:[]};}
+function blankDay(){return {issues:[],rescues:[],adhocs:[],lot:{},extras:[],track:[],rescueRoutes:[],problemSolve:[],misc:'',eodCustom:'',vanIssues:[],keyReqs:[],conex:[]};}
 let db={days:{},reminders:[],rescueLog:[],selCat:'Vehicle',rlRange:7};
 try{const r=localStorage.getItem(DB_KEY);if(r)db=Object.assign(db,JSON.parse(r));}catch(e){}
 if(!db.rescueLog)db.rescueLog=[];
@@ -728,6 +754,7 @@ function ensureDay(){
   if(!day.extras)day.extras=[];
   if(!day.track)day.track=[];
   if(!day.lot)day.lot={};
+  if(!day.conex)day.conex=[];
   return tk;
 }
 /* never lose the last action to sleep, tab discard, or close */
@@ -807,6 +834,7 @@ function switchTab(name){
   document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+name));
   if(name==='eod')refreshEOD();
   if(name==='van'){renderVanIssues();renderKeyReqs();}
+  if(name==='lot')renderConex();
 }
 
 /* ---------- badges ---------- */
@@ -1413,6 +1441,37 @@ function renderExtras(){
   });
 }
 
+/* ---------- conex (vans parked by the container) ---------- */
+function cxEl(x){
+  const e=document.createElement('div');e.className='cx-row'+(x.grounded?' grounded':'');
+  e.dataset.id=x.id;
+  const v=document.createElement('span');v.className='cx-v';v.textContent=x.van||'—';
+  const soc=document.createElement('span');soc.className='cx-s'+(x.soc?'':' empty');
+  soc.textContent=x.soc?x.soc:'—';
+  const g=document.createElement('button');g.className='cx-ground'+(x.grounded?' on':'');
+  g.textContent=x.grounded?'GROUNDED':'Ground';
+  g.onclick=()=>{x.grounded=!x.grounded;save();renderConex();};
+  const del=document.createElement('button');del.className='del';del.textContent='×';
+  del.onclick=()=>{day.conex=day.conex.filter(y=>y.id!==x.id);renderConex();save();};
+  e.appendChild(v);e.appendChild(soc);e.appendChild(g);e.appendChild(del);
+  return e;
+}
+function renderConex(){
+  const w=el('cx-list');if(!w)return;w.textContent='';
+  if(!day.conex.length){w.innerHTML='<div class="empty">No vans at the Conex.</div>';return;}
+  const f=document.createDocumentFragment();
+  day.conex.forEach(x=>f.appendChild(cxEl(x)));
+  w.appendChild(f);
+}
+function addConex(){
+  const vn=v('cx-van').toUpperCase();
+  const soc=v('cx-soc').toUpperCase();
+  if(!vn){toast('Van # needed');return;}
+  day.conex.unshift({id:Date.now(),van:vn,soc:soc,grounded:false});
+  el('cx-van').value='';el('cx-soc').value='';el('cx-van').focus();
+  renderConex();save();toast(vn+' added to Conex');
+}
+
 /* ---------- lot: build once, paint in place ---------- */
 const BAYEL={};
 // live bays only (everything except the flagged-down A120)
@@ -1494,6 +1553,16 @@ const TGROUPS=[
 ];
 const TFLAG_LBL={};const TFLAG_GRP={};
 TGROUPS.forEach(([g,_,fl])=>fl.forEach(([k,lbl])=>{TFLAG_LBL[k]=lbl;TFLAG_GRP[k]=g;}));
+const VAN_FLAGS=new Set(['vanissue','dash','damage','tire','ac']);
+function syncTrackVanIssue(t){
+  const vf=t.flags.filter(k=>VAN_FLAGS.has(k));
+  const existing=day.vanIssues.find(x=>x.trackId===t.id);
+  if(vf.length){
+    const label=vf.map(k=>TFLAG_LBL[k]).join(', ')+(t.note?' — '+t.note:'');
+    if(existing){existing.van=t.van||existing.van;existing.note=label;existing.driver=t.name;}
+    else day.vanIssues.unshift({id:Date.now()+Math.floor(Math.random()*999),trackId:t.id,van:t.van||'',driver:t.name||'—',note:label,ts:t.ts||Date.now(),st:'pending',src:'track'});
+  }else if(existing){day.vanIssues=day.vanIssues.filter(x=>x.trackId!==t.id);}
+}
 let tSel=new Set();
 let tEditId=null;
 
@@ -1524,18 +1593,20 @@ function addTrack(){
   if(!el('t-name'))return;
   const n=v('t-name');
   if(!n){toast('Driver name needed');return;}
-  if(!tSel.size&&!v('t-note')){toast('Tap at least one issue, or add a note');return;}
+  if(!tEditId&&!tSel.size&&!v('t-note')){toast('Tap at least one issue, or add a note');return;}
   const flags=[...tSel];
   const van=el('t-van')?v('t-van').toUpperCase():'';
   if(tEditId){
     const t=day.track.find(x=>x.id===tEditId);
-    if(t){t.name=normName(n);t.van=van;t.flags=flags;t.note=v('t-note');}
+    if(t){t.name=normName(n);t.van=van;t.flags=flags;t.note=v('t-note');syncTrackVanIssue(t);}
     tEditId=null;
     toast('Updated '+normName(n));
   }else{
-    day.track.unshift({id:Date.now(),name:normName(n),van:van,flags,note:v('t-note'),ts:Date.now()});
+    const nt={id:Date.now(),name:normName(n),van:van,flags,note:v('t-note'),ts:Date.now()};
+    day.track.unshift(nt);syncTrackVanIssue(nt);
     toast('Logged '+normName(n));
   }
+  if(el('vi-list'))renderVanIssues();
   el('t-name').value='';el('t-note').value='';
   if(el('t-van'))el('t-van').value='';
   tSel=new Set();
@@ -1601,9 +1672,10 @@ function trackEl(t){
   const btns=e.querySelectorAll('.del');
   btns[0].onclick=()=>editTrack(t.id);
   btns[1].onclick=()=>{
+    day.vanIssues=day.vanIssues.filter(x=>x.trackId!==t.id);
     day.track=day.track.filter(x=>x.id!==t.id);
     if(tEditId===t.id){tEditId=null;tSel=new Set();el('t-name').value='';el('t-note').value='';renderTrackForm();}
-    renderTrack();save();
+    renderTrack();if(el('vi-list'))renderVanIssues();save();
   };
   return e;
 }
@@ -1991,9 +2063,17 @@ function addVanIssueManual(){
   const w=el('vi-list');if(day.vanIssues.length===1)w.textContent='';w.insertBefore(viEl(x),w.firstChild);save();badges();toast('Logged');
 }
 /* ---------- rivian key requests ---------- */
+function parseVinList(raw){return String(raw||'').split(/[,;\n\r\t ]+/).map(t=>t.trim()).filter(Boolean);}
 function krPreview(){
   const box=el('kr-preview');if(!box)return;const raw=v('kr-vin');
   if(!raw){box.textContent='';box.className='kr-preview';return;}
+  const tokens=parseVinList(raw);
+  if(tokens.length>1){
+    const parts=tokens.map(t=>{const m=matchEDV(t);return m.van?('<b>'+m.van+'</b>'):(m.ambiguous?'?':'✗');});
+    const okCount=tokens.filter(t=>matchEDV(t).van).length;
+    box.className='kr-preview '+(okCount===tokens.length?'ok':(okCount?'warn':'bad'));
+    box.innerHTML=okCount+'/'+tokens.length+' matched: '+parts.join(', ');return;
+  }
   const m=matchEDV(raw);
   if(m.van){box.className='kr-preview ok';box.innerHTML='✓ matches <b>'+m.van+'</b>';}
   else if(m.ambiguous){box.className='kr-preview warn';box.innerHTML='⚠ multiple: '+m.ambiguous.join(', ')+' — more digits';}
@@ -2002,11 +2082,16 @@ function krPreview(){
 }
 function addKeyReq(){
   const raw=v('kr-vin');if(!raw){toast('Paste VIN digits');return;}
-  const m=matchEDV(raw);const digits=raw.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  const x={id:Date.now(),digits:digits,ts:Date.now(),van:m.van||'',flag:m.van?'':(m.ambiguous?'ambiguous':'nomatch'),cand:m.ambiguous||[]};
-  day.keyReqs.unshift(x);el('kr-vin').value='';krPreview();el('kr-vin').focus();
-  const w=el('kr-list');if(day.keyReqs.length===1)w.textContent='';w.insertBefore(krEl(x),w.firstChild);save();
-  toast(m.van?('Logged — '+m.van):'Logged — flagged');
+  const tokens=parseVinList(raw);if(!tokens.length){toast('Paste VIN digits');return;}
+  const added=[];const w=el('kr-list');
+  tokens.forEach(tok=>{
+    const m=matchEDV(tok);const digits=tok.toUpperCase().replace(/[^A-Z0-9]/g,'');if(!digits)return;
+    const x={id:Date.now()+Math.floor(Math.random()*99999),digits:digits,ts:Date.now(),van:m.van||'',flag:m.van?'':(m.ambiguous?'ambiguous':'nomatch'),cand:m.ambiguous||[]};
+    day.keyReqs.unshift(x);if(w){if(day.keyReqs.length===1)w.textContent='';w.insertBefore(krEl(x),w.firstChild);}
+    added.push(m.van||'?');
+  });
+  el('kr-vin').value='';krPreview();el('kr-vin').focus();save();
+  toast(added.length>1?('Logged '+added.length+' — '+added.join(', ')):('Logged — '+added[0]));
 }
 function krEl(x){
   const e=document.createElement('div');e.className='item';e.dataset.id=x.id;
@@ -2029,7 +2114,7 @@ function renderKeyReqs(){
 }
 function renderAll(){
   renderCats();renderIssues();renderAdhocs();renderRescueRoutes();renderRescues();renderProblemSolve();renderRescueStats();renderVanIssues();renderKeyReqs();
-  renderExtras();buildLot();renderQuick();renderReminders();renderTrackForm();renderTrack();renderIssueArchive();renderMisc();refreshEOD();badges();
+  renderExtras();buildLot();renderConex();renderQuick();renderReminders();renderTrackForm();renderTrack();renderIssueArchive();renderMisc();refreshEOD();badges();
 }
 function boot(){
   renderAll();tickClock();fetchWeather();
@@ -2043,6 +2128,8 @@ function boot(){
   attachNameAC(el('t-name'));
   if(el('t-list'))setInterval(()=>{document.querySelectorAll('#t-list .ttimer:not(.frozen)').forEach(sp=>{sp.textContent=fmtDur(Date.now()-(+sp.dataset.ts));});},1000);
   const et=el('eod-text');if(et){et.addEventListener('input',()=>{day.eodCustom=et.value;save();const st=el('eod-state');if(st)st.textContent='✎ manually edited — auto-refresh paused';});}
+  const cxv=el('cx-van');if(cxv){cxv.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addConex();}});}
+  const cxs=el('cx-soc');if(cxs){cxs.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addConex();}});}
   const kv=el('kr-vin');if(kv){kv.addEventListener('input',krPreview);kv.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addKeyReq();}});}
   const vin2=el('vi-note');if(vin2){vin2.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addVanIssueManual();}});}
   const mn=el('misc-notes');if(mn){mn.value=day.misc||'';mn.addEventListener('input',()=>{day.misc=mn.value;save();});}
